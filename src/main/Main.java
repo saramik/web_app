@@ -420,6 +420,182 @@ public class Main {
 			}
 		});
 
+		// ovo jos malo istestirati
+		get("/porudzbine", (req, res) -> {
+			// menadzer svoje
+			// dostavljac sve koje su u statusu ceka dostavljaca i sve one za koje su oni zaduzeni
+			// kupac svoje, i ovde da moze odabrati nedostavljene
+			res.type("application/json");
+			Session ss = req.session(true);
+			Korisnik trenutniKorisnik = ss.attribute("user");
+			if(trenutniKorisnik == null) {
+				res.status(401);
+				return "";
+			}
+			String korisnickoIme = trenutniKorisnik.getKorisnickoIme();
+			if (trenutniKorisnik instanceof Menadzer) {
+				try {
+					List<PorudzbinaDTO> porudzbine = aplikacija.dobaviPorudzbineMenadzera(korisnickoIme);
+					res.status(200);
+					return g.toJson(porudzbine);
+				} catch (Exception e){
+					res.status(400);
+					return e.getMessage();
+				}
+			}
+
+			if (trenutniKorisnik instanceof Dostavljac){
+				List<PorudzbinaDTO> porudzbine = aplikacija.dobaviPorudzbineDostavljaca(korisnickoIme);
+				return g.toJson(porudzbine);
+			}
+
+			if (trenutniKorisnik instanceof Kupac){
+				List<PorudzbinaDTO> porudzbine = aplikacija.dobaviPorudzbineKupca(korisnickoIme);
+				return g.toJson(porudzbine);
+			}
+			return "";
+		});
+
+		// dobavljanje jedne porudzbine na osnovu id-ja (bez artikala)
+		get("/porudzbine/:porudzbina", (req, res) -> {
+			res.type("application/json");
+			Session ss = req.session(true);
+			Korisnik trenutniKorisnik = ss.attribute("user");
+			if(trenutniKorisnik == null) {
+				res.status(401);
+				return "";
+			}
+			String porudzbinaId = req.params("porudzbina");
+			try {
+				aplikacija.proveriKorisnikaZaNarudzbenicu(trenutniKorisnik, porudzbinaId); 	// da li korisnik moze da vidi artikle porudzbenice
+				PorudzbinaDTO porudzbina = aplikacija.dobaviPorudzbinu(porudzbinaId);
+				res.status(200);
+				return g.toJson(porudzbina);
+			} catch (Exception e){
+				res.status(400);
+				return e.getMessage();
+			}
+		});
+
+		get("/porudzbinaArtikli/:porudzbina", (req, res) -> {
+			res.type("application/json");
+			Session ss = req.session(true);
+			Korisnik trenutniKorisnik = ss.attribute("user");
+			if(trenutniKorisnik == null) {
+				res.status(401);
+				return "";
+			}
+			String porudzbina = req.params("porudzbina");
+			try {
+				aplikacija.proveriKorisnikaZaNarudzbenicu(trenutniKorisnik, porudzbina); 	// da li korisnik moze da vidi artikle porudzbenice
+				List<ArtikalPorudzbenica> artikli = aplikacija.dobaviArtiklePorudzbine(porudzbina);
+				res.status(200);
+				return g.toJson(artikli);
+			} catch (Exception e){
+				res.status(400);
+				return e.getMessage();
+			}
+		});
+
+		put("/promeniStatusPorudzbine/:porudzbina/:noviStatus", (req, res) -> {
+			res.type("application/json");
+			Session ss = req.session(true);
+			Korisnik trenutniKorisnik = ss.attribute("user");
+			if(trenutniKorisnik == null) {
+				res.status(401);
+				return "";
+			}
+			String porudzbina = req.params("porudzbina");
+			try {
+				StatusPorudzbine noviStatus = StatusPorudzbine.valueOf(req.params("noviStatus"));
+				aplikacija.proveriKorisnikaZaNarudzbenicu(trenutniKorisnik, porudzbina); 	// da li korisnik moze da vidi artikle porudzbenice
+				Porudzbina p = aplikacija.promeniStatusPorudzbine(porudzbina, noviStatus, trenutniKorisnik);
+				res.status(200);
+				return g.toJson(p);
+			} catch (Exception e){
+				res.status(400);
+				return e.getMessage();
+			}
+		});
+
+		post("/zahtevZaDostavom/:porudzbina", (req, res) -> {
+			res.type("application/json");
+			Session ss = req.session(true);
+			Korisnik trenutniKorisnik = ss.attribute("user");
+			if(trenutniKorisnik == null) {
+				res.status(401);
+				return "";
+			}
+			if (!(trenutniKorisnik instanceof Dostavljac)){
+				res.status(403);
+				return "";
+			}
+			String porudzbina = req.params("porudzbina");
+			try {
+				aplikacija.kreirajZahtevZaDostavom(porudzbina, trenutniKorisnik);
+				res.status(200);
+				return "";
+			} catch (Exception e){
+				res.status(400);
+				return e.getMessage();
+			}
+		});
+
+		put("/odgovoriNaZahtev/:zahtev", (req, res) -> {
+			Session ss = req.session(true);
+			Korisnik trenutniKorisnik = ss.attribute("user");
+			if(trenutniKorisnik == null) {
+				res.status(401);
+				return "";
+			}
+			if (!(trenutniKorisnik instanceof Menadzer)){
+				res.status(403);
+				return "";
+			}
+
+			try {
+				String zahtev = req.params("zahtev");
+				boolean odobreno = Boolean.parseBoolean(req.queryParams("odobreno"));
+				aplikacija.proveriOdgovorNaZahtev(trenutniKorisnik, zahtev);
+				aplikacija.odgovoriNaZahtevZaDostavom(zahtev, odobreno);
+				res.status(200);
+				return "";
+			} catch (Exception e){
+				res.status(400);
+				return e.getMessage();
+			}
+
+		});
+
+		get("/zahtevi", (req, res) -> {
+			Session ss = req.session(true);
+			Korisnik trenutniKorisnik = ss.attribute("user");
+			if(trenutniKorisnik == null) {
+				res.status(401);
+				return "";
+			}
+			if (!(trenutniKorisnik instanceof Menadzer)){
+				res.status(403);
+				return "";
+			}
+
+			try {
+				String restoran = ((Menadzer) trenutniKorisnik).getRestoran();
+				if (restoran == null) throw new Exception("Nema restorana za ovog menadzera!");
+				List<ZahtevZaDostavom> zahtevi = aplikacija.dobaviZahteveZaRestoran(restoran);
+				res.status(200);
+				return g.toJson(zahtevi);
+			} catch (Exception e){
+				res.status(400);
+				return e.getMessage();
+			}
+		});
+
+
+		// filter i pretragu uraditi
+
+		// komentari
+
 	}
 
 	private static int isAdministrator(Request req){

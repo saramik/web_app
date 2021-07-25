@@ -2,6 +2,7 @@ package model;
 
 import DTO.KorisnikDTO;
 import DTO.KorisnikProsirenoDTO;
+import DTO.PorudzbinaDTO;
 import DTO.RestoranDTO;
 
 import java.text.SimpleDateFormat;
@@ -22,17 +23,21 @@ public class Aplikacija {
 	private HashMap<String, Artikal> artikli = new HashMap<String, Artikal>();
 	private HashMap<String, Porudzbina> porudzbine = new HashMap<String, Porudzbina>();
 	private HashMap<String, Komentar> komentari = new HashMap<String, Komentar>();
+	private HashMap<String, ZahtevZaDostavom> zahteviZaDostavom = new HashMap<>();
 
 	public Aplikacija(){
-        kupci.put("kupac1", new Kupac("kupac1", "lozinka1", "ana", "sasic",Pol.ZENSKI, 1000));
-        Kupac k = new Kupac("akupac2", "lozinka1", "kupkinja", "kupic",Pol.ZENSKI, 199);
+        kupci.put("kupac1", new Kupac("kupac1", "lozinka", "ana", "sasic",Pol.ZENSKI, 1000));
+        Kupac k = new Kupac("kupac2", "lozinka", "kupkinja", "kupic",Pol.ZENSKI, 199);
         k.setSakupljeniBodovi(200);
-        kupci.put("akupac2", k);
+        kupci.put("kupac2", k);
         administratori.put("admin", new Administrator("admin", "admin", "admin", "admin",Pol.ZENSKI, 1000));
         dostavljaci.put("dost", new Dostavljac("dost", "admin", "d", "d",Pol.ZENSKI, 1000));
-        menadzeri.put("menadzerko", new Menadzer("menadzerko", "menadzer", "d", "d",Pol.ZENSKI, 1000));
+        menadzeri.put("menadzerko", new Menadzer("menadzerko", "lozinka", "d", "d",Pol.ZENSKI, 1000));
 
         menadzeri.get("menadzerko").setRestoran("r1");
+
+        menadzeri.put("m", new Menadzer("m", "lozinka", "d", "d",Pol.ZENSKI, 1000));
+
 
         Lokacija l = new Lokacija();
         Restoran r = new Restoran("r1", TipRestorana.ITALIJANSKI, l, "", 480l, 900l);
@@ -43,6 +48,18 @@ public class Aplikacija {
         // TODO: novom dodeliti id
         r.getArtikli().add("123");
         artikli.put("123", a);
+
+
+        Porudzbina p = new Porudzbina("12345", "r1", 123123, 10.0, "kupac1", StatusPorudzbine.CEKA_DOSTAVLJACA);
+        porudzbine.put(p.getId(), p);
+        this.kupci.get("kupac1").getPorudzbine().add("12345");
+        p.getArtikli().add(new ArtikalPorudzbenica("111", "artikal1", 1, 123));
+        p.getArtikli().add(new ArtikalPorudzbenica("222", "artikal2", 1, 123));
+
+
+        Porudzbina pe = new Porudzbina("54321", "r1", 123123, 10.0, "kupac2", StatusPorudzbine.U_PRIPREMI);
+        porudzbine.put(pe.getId(), pe);
+        this.kupci.get("kupac2").getPorudzbine().add("54321");
 
     }
 
@@ -548,7 +565,204 @@ public class Aplikacija {
 	    // TODO: proveriti da li su vrednosti dozvoljene
 	    return true;
     }
-	
+
+    public List<PorudzbinaDTO> dobaviPorudzbineMenadzera(String korisnickoIme) throws Exception {
+	    String restoran = this.menadzeri.get(korisnickoIme).getRestoran();
+	    if (restoran == null) throw new Exception("Ovom menadzeru nije dodeljen restoran!");
+	    List<PorudzbinaDTO> porudzbineDTO = new ArrayList<>();
+	    for (Porudzbina p: this.porudzbine.values()){
+	        if (p.getRestoran().equals(restoran)) porudzbineDTO.add(toPorudzbinaDTO(p));
+        }
+	    return porudzbineDTO;
+    }
+
+    public List<PorudzbinaDTO> dobaviPorudzbineDostavljaca(String korisnickoIme) {
+        List<PorudzbinaDTO> porudzbineDTO = new ArrayList<>();
+	    // njegove porudzbine
+        for (String p: this.dostavljaci.get(korisnickoIme).getPorudzbine()){
+	        Porudzbina porudzbina = this.porudzbine.get(p);
+	        porudzbineDTO.add(toPorudzbinaDTO(porudzbina));
+        }
+        // porudzbine koje nemaju dostavljaca
+	    for (Porudzbina p: porudzbine.values()){
+	        if (p.getStatus().equals(StatusPorudzbine.CEKA_DOSTAVLJACA))
+                porudzbineDTO.add(toPorudzbinaDTO(p));
+        }
+	    return porudzbineDTO;
+    }
+
+    // kad menadzer odobri, onda se dodaje u listu dostavljaca (i promeni se status)
+
+
+    // nedostavljene su filter
+    public List<PorudzbinaDTO> dobaviPorudzbineKupca(String korisnickoIme) {
+        List<PorudzbinaDTO> porudzbineDTO = new ArrayList<>();
+
+        for (String p: kupci.get(korisnickoIme).getPorudzbine()){
+            Porudzbina porudzbina = this.porudzbine.get(p);
+            porudzbineDTO.add(toPorudzbinaDTO(porudzbina));
+        }
+        return porudzbineDTO;
+    }
+
+    private PorudzbinaDTO toPorudzbinaDTO(Porudzbina porudzbina){
+	    Kupac k = kupci.get(porudzbina.getKupac());
+	    PorudzbinaDTO dto = new PorudzbinaDTO(porudzbina.getId(), porudzbina.getRestoran(), porudzbina.getDatum(),
+                porudzbina.getCena(), k.getIme(), k.getPrezime(), porudzbina.getStatus());
+	    return dto;
+    }
+
+    public boolean proveriKorisnikaZaNarudzbenicu(Korisnik trenutniKorisnik, String porudzbina) throws Exception {
+	    if (trenutniKorisnik instanceof Administrator) throw new Exception("Administrator ne moze da vidi porudbenice!");
+
+	    if (!this.porudzbine.containsKey(porudzbina))
+	        throw new Exception("Nepostojeca porudzbina!");
+
+	    Porudzbina p = this.porudzbine.get(porudzbina);
+
+	    if (trenutniKorisnik instanceof Menadzer){
+	        if (((Menadzer) trenutniKorisnik).getRestoran() == null) throw new Exception("Nedozvoljen pristup!");
+	        if (this.menadzeri.get(trenutniKorisnik.getKorisnickoIme()).getRestoran().equals(p.getRestoran()))
+	            return true;
+	        throw new Exception("Menadzer ne moze da vidi porudzbinu koja nije iz njegovog restorana!");
+        }
+
+        if (trenutniKorisnik instanceof Dostavljac) {
+            if (this.porudzbine.get(porudzbina).getStatus().equals(StatusPorudzbine.CEKA_DOSTAVLJACA)) return true;
+            if (this.dostavljaci.get(trenutniKorisnik.getKorisnickoIme()).getPorudzbine().contains(porudzbina))
+                return true;
+            throw new Exception("Porudzbenica nije dostupna dostavljacu!");
+        }
+
+        if (trenutniKorisnik instanceof Kupac){
+	        if (this.kupci.get(trenutniKorisnik.getKorisnickoIme()).getPorudzbine().contains(porudzbina))
+	            return true;
+	        throw new Exception("Kupac moze da vidi samo svoje porudzbine!");
+        }
+	    throw new Exception("Desila se neka greska!");
+    }
+
+
+    public List<ArtikalPorudzbenica> dobaviArtiklePorudzbine(String porudzbina) throws Exception {
+
+	    if (!this.porudzbine.containsKey(porudzbina))
+	        throw new Exception("Nepostojeca porudzbina!");
+	    return this.porudzbine.get(porudzbina).getArtikli();
+
+    }
+
+    public PorudzbinaDTO dobaviPorudzbinu(String porudzbinaId) throws Exception {
+	    if (!this.porudzbine.containsKey(porudzbinaId)) throw new Exception("Nepostojeca porudzbina!");
+	    return toPorudzbinaDTO(this.porudzbine.get(porudzbinaId));
+    }
+
+    public Porudzbina promeniStatusPorudzbine(String porudzbina, StatusPorudzbine noviStatus, Korisnik korisnik) throws Exception {
+        if (!this.porudzbine.containsKey(porudzbina)) throw new Exception("Nepostojeca porudzbina!");
+
+        Porudzbina p = this.porudzbine.get(porudzbina);
+
+        if (korisnik instanceof Menadzer){
+            if (p.getStatus().equals(StatusPorudzbine.OBRADA)){
+                if (!noviStatus.equals(StatusPorudzbine.U_PRIPREMI)){
+                    throw new Exception("Neodgovarajuci redosled statusa porudzbine!");
+                }
+                p.setStatus(StatusPorudzbine.U_PRIPREMI);
+                return p;
+            }
+            else if (p.getStatus().equals(StatusPorudzbine.U_PRIPREMI)) {
+                if (!noviStatus.equals(StatusPorudzbine.CEKA_DOSTAVLJACA)){
+                    throw new Exception("Neodgovarajuci redosled statusa porudzbine!");
+                }
+                p.setStatus(StatusPorudzbine.CEKA_DOSTAVLJACA);
+                return p;
+            }
+            else if (p.getStatus().equals(StatusPorudzbine.CEKA_DOSTAVLJACA)) {
+                if (!noviStatus.equals(StatusPorudzbine.U_TRANSPORTU)){
+                    throw new Exception("Neodgovarajuci redosled statusa porudzbine!");
+                }
+                p.setStatus(StatusPorudzbine.U_TRANSPORTU);
+                return p;
+            }
+            else throw new Exception("Nedozvoljeno!");
+        }
+        else if (korisnik instanceof Dostavljac){
+            if (p.getStatus().equals(StatusPorudzbine.U_TRANSPORTU)) {
+                if (!noviStatus.equals(StatusPorudzbine.DOSTAVLJENA)){
+                    throw new Exception("Neodgovarajuci redosled statusa porudzbine!");
+                }
+                p.setStatus(StatusPorudzbine.DOSTAVLJENA);
+                return p;
+            }
+            else throw new Exception("Nedozvoljeno!");
+
+        }
+        else if (korisnik instanceof Kupac){
+            if (p.getStatus().equals(StatusPorudzbine.OBRADA)) {
+                if (!noviStatus.equals(StatusPorudzbine.OTKAZANA)){
+                    throw new Exception("Neodgovarajuci redosled statusa porudzbine!");
+                }
+                p.setStatus(StatusPorudzbine.OTKAZANA);
+                return p;
+            }
+            else throw new Exception("Nedozvoljeno!");
+        }
+        else throw new Exception("Nedozvoljeno!");
+    }
+
+    public boolean kreirajZahtevZaDostavom(String porudzbina, Korisnik trenutniKorisnik) throws Exception {
+
+	    if (this.porudzbine.containsKey(porudzbina)) throw new Exception("Nepostojeca porudzba!");
+
+        Porudzbina p = this.porudzbine.get(porudzbina);
+        if (!p.getStatus().equals(StatusPorudzbine.CEKA_DOSTAVLJACA))
+            throw new Exception("Nije moguce kreirati zahtev za dostavu za porudzbinu koja nema status CEKA_DOSTAVLJACA");
+        Random rand = new Random();
+        String id = rand.nextInt(2000) + "";
+        ZahtevZaDostavom zahtev = new ZahtevZaDostavom(id, porudzbina,
+                trenutniKorisnik.getKorisnickoIme(), StatusZahteva.NA_CEKANJU, p.getRestoran());
+        this.zahteviZaDostavom.put(id, zahtev);
+        return true;
+    }
+
+    public boolean odgovoriNaZahtevZaDostavom(String zahtev, boolean odobreno) throws Exception {
+
+        ZahtevZaDostavom z = this.zahteviZaDostavom.get(zahtev);
+        if (z == null) throw new Exception("Nepostojeci zahtev!");
+
+        if (!odobreno){
+            z.setStatus(StatusZahteva.ODBIJENO);
+            return false;
+        }
+        // odobreno je
+        z.setStatus(StatusZahteva.PRIHVACENO);
+        Dostavljac dostavljac = dostavljaci.get(z.getKorisnickoImeDostavljaca());
+        dostavljac.getPorudzbine().add(z.getPorudzbina());
+        porudzbine.get(z.getPorudzbina()).setStatus(StatusPorudzbine.U_TRANSPORTU);
+        // odbiti sve ostale zahteve za istu narudzbinu
+        for (ZahtevZaDostavom zd: this.zahteviZaDostavom.values()){
+            if (!zd.getId().equals(zahtev) && zd.getPorudzbina().equals(z.getPorudzbina())
+                    && zd.getStatus().equals(StatusZahteva.NA_CEKANJU))
+                zd.setStatus(StatusZahteva.ODBIJENO);
+        }
+       return true;
+    }
+
+    public List<ZahtevZaDostavom> dobaviZahteveZaRestoran(String restoran){
+	    // proveri da li menadzer ima pristup tom restoranu
+	    List<ZahtevZaDostavom> zahtevi = new ArrayList<>();
+	    for (ZahtevZaDostavom zahtev: zahteviZaDostavom.values()){
+	        if (zahtev.getRestoran().equals(restoran)) zahtevi.add(zahtev);
+        }
+	    return zahtevi;
+    }
+
+    public void proveriOdgovorNaZahtev(Korisnik trenutniKorisnik, String zahtev) throws Exception {
+        String restoran = this.menadzeri.get(trenutniKorisnik.getKorisnickoIme()).getRestoran();
+        ZahtevZaDostavom z = this.zahteviZaDostavom.get(zahtev);
+        if (!z.getRestoran().equals(restoran)) throw new Exception("Menadzer nema pristup ovom restoranu!");
+	}
+
+    // mozda svi zahtevi za jednu porudzbinu
 }
 
 

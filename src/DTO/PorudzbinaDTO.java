@@ -1,30 +1,29 @@
-package model;
+package DTO;
 
-import java.util.ArrayList;
-import java.util.List;
+import model.StatusPorudzbine;
 
-public class Porudzbina {
+public class PorudzbinaDTO {
 
     private String id;
-    private List<ArtikalPorudzbenica> artikli;
     private String restoran;
     private long datum;
     private double cena;
-    private String kupac;
+    private String imeKupca;
+    private String prezimeKupca;
     private StatusPorudzbine status;
 
-    public Porudzbina(){
+    public PorudzbinaDTO(){
 
     }
 
-    public Porudzbina(String id, String restoran, long datum, double cena, String kupac, StatusPorudzbine status) {
+    public PorudzbinaDTO(String id, String restoran, long datum, double cena, String imeKupca, String prezimeKupca, StatusPorudzbine status) {
         this.id = id;
         this.restoran = restoran;
         this.datum = datum;
         this.cena = cena;
-        this.kupac = kupac;
+        this.imeKupca = imeKupca;
+        this.prezimeKupca = prezimeKupca;
         this.status = status;
-        this.artikli = new ArrayList<>();
     }
 
     public String getId() {
@@ -33,14 +32,6 @@ public class Porudzbina {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public List<ArtikalPorudzbenica> getArtikli() {
-        return artikli;
-    }
-
-    public void setArtikli(List<ArtikalPorudzbenica> artikli) {
-        this.artikli = artikli;
     }
 
     public String getRestoran() {
@@ -67,12 +58,20 @@ public class Porudzbina {
         this.cena = cena;
     }
 
-    public String getKupac() {
-        return kupac;
+    public String getImeKupca() {
+        return imeKupca;
     }
 
-    public void setKupac(String kupac) {
-        this.kupac = kupac;
+    public void setImeKupca(String imeKupca) {
+        this.imeKupca = imeKupca;
+    }
+
+    public String getPrezimeKupca() {
+        return prezimeKupca;
+    }
+
+    public void setPrezimeKupca(String prezimeKupca) {
+        this.prezimeKupca = prezimeKupca;
     }
 
     public StatusPorudzbine getStatus() {

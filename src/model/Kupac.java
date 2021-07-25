@@ -1,5 +1,6 @@
 package model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Kupac extends Korisnik{
@@ -18,6 +19,7 @@ public class Kupac extends Korisnik{
         tipKupca = new TipKupca();
         tipKupca.setImeTipa(ImeTipa.BRONZANI);
         tipKupca.setTrazeniBroj(100);   // npr
+        porudzbine = new ArrayList<>();
     }
 
     public List<String> getPorudzbine() {
