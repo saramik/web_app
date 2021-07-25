@@ -5,13 +5,13 @@ public class ZahtevZaDostavom {
     private String id;
     private String porudzbina;
     private String korisnickoImeDostavljaca;
-    private StatusZahteva status;
+    private Status status;
     private String restoran;
 
     public ZahtevZaDostavom(){
     }
 
-    public ZahtevZaDostavom(String id, String porudzbina, String korisnickoImeDostavljaca, StatusZahteva status, String restoran) {
+    public ZahtevZaDostavom(String id, String porudzbina, String korisnickoImeDostavljaca, Status status, String restoran) {
         this.id = id;
         this.porudzbina = porudzbina;
         this.korisnickoImeDostavljaca = korisnickoImeDostavljaca;
@@ -43,11 +43,11 @@ public class ZahtevZaDostavom {
         this.korisnickoImeDostavljaca = korisnickoImeDostavljaca;
     }
 
-    public StatusZahteva getStatus() {
+    public Status getStatus() {
         return status;
     }
 
-    public void setStatus(StatusZahteva status) {
+    public void setStatus(Status status) {
         this.status = status;
     }
 

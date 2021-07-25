@@ -1,5 +1,5 @@
 package model;
 
-public enum StatusZahteva {
+public enum Status {
     NA_CEKANJU, PRIHVACENO, ODBIJENO
 }

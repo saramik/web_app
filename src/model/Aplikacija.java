@@ -5,7 +5,6 @@ import DTO.KorisnikProsirenoDTO;
 import DTO.PorudzbinaDTO;
 import DTO.RestoranDTO;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -719,7 +718,7 @@ public class Aplikacija {
         Random rand = new Random();
         String id = rand.nextInt(2000) + "";
         ZahtevZaDostavom zahtev = new ZahtevZaDostavom(id, porudzbina,
-                trenutniKorisnik.getKorisnickoIme(), StatusZahteva.NA_CEKANJU, p.getRestoran());
+                trenutniKorisnik.getKorisnickoIme(), Status.NA_CEKANJU, p.getRestoran());
         this.zahteviZaDostavom.put(id, zahtev);
         return true;
     }
@@ -730,19 +729,19 @@ public class Aplikacija {
         if (z == null) throw new Exception("Nepostojeci zahtev!");
 
         if (!odobreno){
-            z.setStatus(StatusZahteva.ODBIJENO);
+            z.setStatus(Status.ODBIJENO);
             return false;
         }
         // odobreno je
-        z.setStatus(StatusZahteva.PRIHVACENO);
+        z.setStatus(Status.PRIHVACENO);
         Dostavljac dostavljac = dostavljaci.get(z.getKorisnickoImeDostavljaca());
         dostavljac.getPorudzbine().add(z.getPorudzbina());
         porudzbine.get(z.getPorudzbina()).setStatus(StatusPorudzbine.U_TRANSPORTU);
         // odbiti sve ostale zahteve za istu narudzbinu
         for (ZahtevZaDostavom zd: this.zahteviZaDostavom.values()){
             if (!zd.getId().equals(zahtev) && zd.getPorudzbina().equals(z.getPorudzbina())
-                    && zd.getStatus().equals(StatusZahteva.NA_CEKANJU))
-                zd.setStatus(StatusZahteva.ODBIJENO);
+                    && zd.getStatus().equals(Status.NA_CEKANJU))
+                zd.setStatus(Status.ODBIJENO);
         }
        return true;
     }
@@ -761,6 +760,57 @@ public class Aplikacija {
         ZahtevZaDostavom z = this.zahteviZaDostavom.get(zahtev);
         if (!z.getRestoran().equals(restoran)) throw new Exception("Menadzer nema pristup ovom restoranu!");
 	}
+
+    public boolean proveriKorisnikaZaKomentar(Korisnik trenutniKorisnik, String restoran) throws Exception {
+	    // da li ima ijednu porudzbinu iz tog restorana koja je dostavljena
+        if (!this.restorani.containsKey(restoran)) throw new Exception("Nema tog restorana!");
+        for (String porudzbina: kupci.get(trenutniKorisnik.getKorisnickoIme()).getPorudzbine()){
+            Porudzbina p = this.porudzbine.get(porudzbina);
+            if (p.getStatus().equals(StatusPorudzbine.DOSTAVLJENA) && p.getRestoran().equals(restoran))
+                return true;
+        }
+        throw new Exception("Ne mozete oceniti ovaj restoran!");
+    }
+
+    public void dodajKomentar(Komentar komentar) {
+	    // id, postavi status, restoran proveri
+        komentar.setStatus(Status.NA_CEKANJU);
+        komentar.setId(new Random().nextInt(2000) + "");
+        this.komentari.put(komentar.getId(), komentar);
+    }
+
+    public List<Komentar> dobaviKomentareRestorana(String restoran, boolean svi){
+
+	    List<Komentar> komentari = new ArrayList<Komentar>();
+	    for (Komentar k: this.komentari.values()){
+	        if (k.getRestoran().equals(restoran)){
+                if (!svi){  // samo prihvaceni
+                    if (k.getStatus().equals(Status.PRIHVACENO)) komentari.add(k);
+                }
+                else {
+                    komentari.add(k);
+                }
+	        }
+        }
+	    return komentari;
+    }
+
+    public boolean resiKomentar(String komentar, boolean prihvacen){
+	    Komentar k = this.komentari.get(komentar);
+	    if (!prihvacen){
+	        k.setStatus(Status.ODBIJENO);
+	        return true;
+        }
+	    k.setStatus(Status.PRIHVACENO);
+	    // uvrsti ocenu
+        Restoran r = this.restorani.get(k.getRestoran());
+        int stariBrojOcena = r.getBrojOcena();
+        double stariProsek = r.getOcena();
+        r.setBrojOcena(stariBrojOcena + 1);
+        double noviProsek = (stariProsek * stariBrojOcena + k.getOcena())/(stariBrojOcena + 1);
+        r.setOcena(noviProsek);
+        return true;
+    }
 
     // mozda svi zahtevi za jednu porudzbinu
 }

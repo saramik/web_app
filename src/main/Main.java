@@ -596,6 +596,42 @@ public class Main {
 
 		// komentari
 
+		post("/komentar/:restoran", (req, res) -> {
+			Session ss = req.session(true);
+			Korisnik trenutniKorisnik = ss.attribute("user");
+			if(trenutniKorisnik == null) {
+				res.status(401);
+				return "";
+			}
+			if (!(trenutniKorisnik instanceof Kupac)){
+				res.status(403);
+				return "";
+			}
+			try {
+				Komentar komentar = g.fromJson(req.body(), Komentar.class);
+				komentar.setKorisnik(trenutniKorisnik.getKorisnickoIme());
+				String restoran = req.params("restoran");
+				aplikacija.proveriKorisnikaZaKomentar(trenutniKorisnik, restoran);
+				aplikacija.dodajKomentar(komentar);
+				res.status(200);
+				return "";
+			} catch (Exception e){
+				res.status(400);
+				return e.getMessage();
+			}
+		});
+
+		put("/resiKomentar/:komentar/:odobren", (req, res) -> {
+			//aplikacija.resiKomentar(komentar, odobren);
+			return "";
+		});
+
+		get("/komentari/:restoran", (req, res) -> {
+			//aplikacija.dobaviKomentareRestorana(restoran);
+			return "";
+		});
+
+
 	}
 
 	private static int isAdministrator(Request req){
