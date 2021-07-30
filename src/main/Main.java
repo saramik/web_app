@@ -34,12 +34,8 @@ public class Main {
 
 	private static String path = new File(new File("").getAbsolutePath() + "/static/data/aplikacija.json").getAbsolutePath();
 
-    public static String denied = "<h2>Access denied</h2>";
-    
 	private static File file = new File(path);
-	
-	private static String odbijeno = "<h1>Odbijeno!</h1>";
-	private static String badRequest = "<h1>Los zahtev!</h1>";
+
 	
 	public static void upisUFajl() {
 		//Create the file
@@ -137,15 +133,14 @@ public class Main {
 				res.status(400);
 				return "Vec ste ulogovani, ne mozete izvrsiti registraciju";
 			}
-			KorisnikDTO k = g.fromJson(req.body(), KorisnikDTO.class);
-
-			if (k.getUloga().equals(Uloga.ADMINISTRATOR) || k.getUloga().equals(Uloga.DOSTAVLJAC) ||
-				k.getUloga().equals(Uloga.MENADZER)){
-				res.status(400);
-				return res.body();
-			}
 
 			try {
+				KorisnikDTO k = g.fromJson(req.body(), KorisnikDTO.class);
+				if (k.getUloga().equals(Uloga.ADMINISTRATOR) || k.getUloga().equals(Uloga.DOSTAVLJAC) ||
+						k.getUloga().equals(Uloga.MENADZER)){
+					res.status(400);
+					return res.body();
+				}
 				KorisnikDTO novi = aplikacija.registracijaKorisnika(k);
 				res.status(200);
 				return g.toJson(novi);
@@ -170,8 +165,9 @@ public class Main {
 				res.status(403);
 				return res;		//?
 			}
-			KorisnikDTO k = g.fromJson(req.body(), KorisnikDTO.class);
+
 			try {
+				KorisnikDTO k = g.fromJson(req.body(), KorisnikDTO.class);
 				KorisnikDTO novi = aplikacija.registracijaKorisnika(k);
 				return g.toJson(novi);
 			} catch(Exception e){
@@ -212,14 +208,14 @@ public class Main {
 				res.status(401);
 				return res;
 			}
-			KorisnikDTO k = g.fromJson(req.body(), KorisnikDTO.class);
-			// ne moze da menja nekog drugog
-			if (!trenutniKorisnik.getKorisnickoIme().equals(k.getKorisnickoIme())){
-				res.status(400);
-				return "";
-			}
 
 			try {
+				KorisnikDTO k = g.fromJson(req.body(), KorisnikDTO.class);
+				// ne moze da menja nekog drugog
+				if (!trenutniKorisnik.getKorisnickoIme().equals(k.getKorisnickoIme())){
+					res.status(400);
+					return "";
+				}
 				Korisnik izmenjeni = aplikacija.izmeniPodatke(k);
 				res.status(200);
 				return g.toJson(izmenjeni);
@@ -239,8 +235,8 @@ public class Main {
 				res.status(401);
 				return res;
 			}
-			IzmenaLozinkeDTO dto = g.fromJson(req.body(), IzmenaLozinkeDTO.class);
 			try {
+				IzmenaLozinkeDTO dto = g.fromJson(req.body(), IzmenaLozinkeDTO.class);
 				aplikacija.izmeniLozinku(trenutniKorisnik.getKorisnickoIme(), dto.getStaraLozinka(), dto.getNovaLozinka());
 				res.status(200);
 				return "";
@@ -272,13 +268,18 @@ public class Main {
 				res.status(indicator);
 				return "";
 			}
-			String pretraga = req.queryParams("pretraga");
-			String uloga = req.queryParams("uloga");
-			String tip = req.queryParams("tip"); 		// vrv se misli na tip kupca a ne kip korisnika!!
-			String sort = req.queryParams("sort");
-
-			List<KorisnikProsirenoDTO> korisnici = aplikacija.pretraziKorisnike(pretraga, uloga, tip, sort);
-			return g.toJson(korisnici);
+			try {
+				String pretraga = req.queryParams("pretraga");
+				String uloga = req.queryParams("uloga");
+				String tip = req.queryParams("tip"); 		// vrv se misli na tip kupca a ne kip korisnika!!
+				String sort = req.queryParams("sort");
+				List<KorisnikProsirenoDTO> korisnici = aplikacija.pretraziKorisnike(pretraga, uloga, tip, sort);
+				res.status(200);
+				return g.toJson(korisnici);
+			} catch (Exception e){
+				res.status(400);
+				return e.getMessage();
+			}
 		});
 
 
@@ -331,8 +332,8 @@ public class Main {
 				res.status(indicator);
 				return "";
 			}
-			RestoranDTO dto = g.fromJson(req.body(), RestoranDTO.class);
 			try {
+				RestoranDTO dto = g.fromJson(req.body(), RestoranDTO.class);
 				aplikacija.dodajRestoran(dto);
 				res.status(200);
 				return dto;
@@ -360,13 +361,18 @@ public class Main {
 			// sortiranje po nazivu, lokaciji, prosecnoj oceni
 
 			// filter po tipu ili samo otvoreni
-			String pretraga = req.queryParams("pretraga");
-			String otvoren = req.queryParams("otvoren");
-			String tip = req.queryParams("tip"); 		// vrv se misli na tip kupca a ne kip korisnika!!
-			String sort = req.queryParams("sort");
+			try {
+				String pretraga = req.queryParams("pretraga");
+				String otvoren = req.queryParams("otvoren");
+				String tip = req.queryParams("tip");        // vrv se misli na tip kupca a ne kip korisnika!!
+				String sort = req.queryParams("sort");
 
-			List<RestoranDTO> restorani = aplikacija.pretragaRestorana(pretraga, tip, otvoren, sort);
-			return g.toJson(restorani);
+				List<RestoranDTO> restorani = aplikacija.pretragaRestorana(pretraga, tip, otvoren, sort);
+				return g.toJson(restorani);
+			} catch (Exception e){
+				res.status(400);
+				return e.getMessage();
+			}
 		});
 
 		get("/dostupniMenadzeri", (req, res) -> {
@@ -407,8 +413,8 @@ public class Main {
 
 		get("/artikli/:idRestorana", (req, res) -> {
 			res.type("application/json");
-			String restoran = req.params("idRestorana");
 			try {
+				String restoran = req.params("idRestorana");
 				List<Artikal> artikli = aplikacija.dobaviArtikleRestorana(restoran);
 				res.status(200);
 				return g.toJson(artikli);
@@ -457,9 +463,10 @@ public class Main {
 				res.status(403);
 				return "";
 			}
-			String artikal = req.params("artikal");
-			String restoran =((Menadzer) trenutniKorisnik).getRestoran();
+
 			try {
+				String artikal = req.params("artikal");
+				String restoran =((Menadzer) trenutniKorisnik).getRestoran();
 				aplikacija.obrisiArtikal(artikal, restoran);
 				res.status(200);
 				return "";
@@ -481,9 +488,9 @@ public class Main {
 				res.status(403);
 				return "";
 			}
-			Artikal artikal = g.fromJson(req.body(), Artikal.class);
-			String idArtikla = req.params("idArtikla");
 			try {
+				Artikal artikal = g.fromJson(req.body(), Artikal.class);
+				String idArtikla = req.params("idArtikla");
 				aplikacija.izmeniArtikal(idArtikla, artikal);
 				res.status(200);
 				return "";
@@ -499,7 +506,7 @@ public class Main {
 		// ------------------ PORUDZBINE --------------------
 		//
 
-		// ovo jos malo istestirati
+		// ovo jos malo istestirati ??????????
 		get("/porudzbine", (req, res) -> {
 			// menadzer svoje
 			// dostavljac sve koje su u statusu ceka dostavljaca i sve one za koje su oni zaduzeni
@@ -544,8 +551,9 @@ public class Main {
 				res.status(401);
 				return "";
 			}
-			String porudzbinaId = req.params("porudzbina");
+
 			try {
+				String porudzbinaId = req.params("porudzbina");
 				aplikacija.proveriKorisnikaZaNarudzbenicu(trenutniKorisnik, porudzbinaId); 	// da li korisnik moze da vidi artikle porudzbenice
 				PorudzbinaDTO porudzbina = aplikacija.dobaviPorudzbinu(porudzbinaId);
 				res.status(200);
@@ -564,8 +572,9 @@ public class Main {
 				res.status(401);
 				return "";
 			}
-			String porudzbina = req.params("porudzbina");
+
 			try {
+				String porudzbina = req.params("porudzbina");
 				aplikacija.proveriKorisnikaZaNarudzbenicu(trenutniKorisnik, porudzbina); 	// da li korisnik moze da vidi artikle porudzbenice
 				List<ArtikalPorudzbenica> artikli = aplikacija.dobaviArtiklePorudzbine(porudzbina);
 				res.status(200);
@@ -584,8 +593,9 @@ public class Main {
 				res.status(401);
 				return "";
 			}
-			String porudzbina = req.params("porudzbina");
+
 			try {
+				String porudzbina = req.params("porudzbina");
 				StatusPorudzbine noviStatus = StatusPorudzbine.valueOf(req.params("noviStatus"));
 				aplikacija.proveriKorisnikaZaNarudzbenicu(trenutniKorisnik, porudzbina); 	// da li korisnik moze da vidi artikle porudzbenice
 				Porudzbina p = aplikacija.promeniStatusPorudzbine(porudzbina, noviStatus, trenutniKorisnik);
@@ -609,8 +619,9 @@ public class Main {
 				res.status(403);
 				return "";
 			}
-			String porudzbina = req.params("porudzbina");
+
 			try {
+				String porudzbina = req.params("porudzbina");
 				aplikacija.kreirajZahtevZaDostavom(porudzbina, trenutniKorisnik);
 				res.status(200);
 				return "";
