@@ -36,14 +36,16 @@ public class Aplikacija {
         menadzeri.get("menadzerko").setRestoran("r1");
 
         menadzeri.put("m", new Menadzer("m", "lozinka", "d", "d",Pol.ZENSKI, 1000));
-        menadzeri.get("menadzerko").setRestoran("r2");
+        menadzeri.get("m").setRestoran("r2");
 
         Lokacija l = new Lokacija();
         Restoran r = new Restoran("r1", TipRestorana.ITALIJANSKI, l, "", 480l, 900l);
+        r.setMenadzer("menadzerko");
         restorani.put(r.getNaziv(), r);
 
         Restoran r2 = new Restoran("r2", TipRestorana.ITALIJANSKI, l, "", 480l, 900l);
         restorani.put(r2.getNaziv(), r2);
+        r2.setMenadzer("m");
 
         Artikal a = new Artikal("a1", 10.0, TipArtikla.JELO, 0.0, "opis a1", "", "r1");
         a.setId("123");
@@ -381,6 +383,7 @@ public class Aplikacija {
 	    long trenutno = trenutnoVremeMinuti();
 
 	    for (Restoran r: this.restorani.values()){
+	        if (!r.isAktivan()) continue;
 	        if (pretraga != null && !pretraga.equals("")){
 	            if (!(r.getNaziv().contains(pretraga) || r.getTip().toString().contains(pretraga) ||
                 r.getLokacija().getMesto().contains(pretraga))) continue;
@@ -422,6 +425,7 @@ public class Aplikacija {
         long trenutnoLong = trenutnoVremeMinuti();
 
         for (Restoran r: this.restorani.values()){
+            if (!r.isAktivan()) continue;
             if (trenutnoLong > r.getOtvorenoOd() && trenutnoLong < r.getOtvorenoDo()) {
                 r.setStatus(true);
                 restoraniOtvoreni.add(r);
@@ -478,6 +482,14 @@ public class Aplikacija {
         }
     }
 
+    public boolean obrisiRestoran(String restoran) throws Exception {
+	    Restoran r = restorani.get(restoran);
+	    if (r == null) throw new Exception("Nepostojeci restoran!");
+	    r.setAktivan(false);
+	    this.menadzeri.get(r.getMenadzer()).setRestoran(null);
+	    return true;
+    }
+
     public List<String> dobaviSlobodneMenadzere() {
 	    List<String> menadzeri = new ArrayList<String>();
 	    for (Menadzer m: this.menadzeri.values()){
@@ -494,7 +506,7 @@ public class Aplikacija {
         }
 	    List<Artikal> artikli = new ArrayList<Artikal>();
 	    for (String artikal: this.restorani.get(restoran).getArtikli()){
-	        artikli.add(this.artikli.get(artikal));
+	        if (this.artikli.get(artikal).isAktivan()) artikli.add(this.artikli.get(artikal));
         }
 	    return artikli;
     }
@@ -503,6 +515,7 @@ public class Aplikacija {
         if (!this.restorani.containsKey(artikal.getRestoran())){
             throw new Exception("Ne postoji zadati restoran!");
         }
+
         if (!proveriArtikal(artikal)){
             throw new Exception("Nevalidan novi artikal");
         }
@@ -513,6 +526,7 @@ public class Aplikacija {
         Random rand = new Random();
         String id = rand.nextInt(20000) + "";
         artikal.setId(id);
+        artikal.setAktivan(true);
         this.artikli.put(id, artikal);
         r.getArtikli().add(artikal.getId());
         return artikal;
@@ -545,7 +559,7 @@ public class Aplikacija {
     private boolean nazivJeJedinstven(String id, String restoran, String naziv) {
 	    for (String s: this.restorani.get(restoran).getArtikli()){
 	        if (s.equals(id)) continue; // da ne bismo racunali da je sam taj artikal ima isti naziv
-	        if (this.artikli.get(s).getNaziv().equals(naziv)) return false;
+	        if (this.artikli.get(s).getNaziv().equals(naziv) && this.artikli.get(s).isAktivan()) return false;
         }
 	    return true;
     }
@@ -562,8 +576,8 @@ public class Aplikacija {
 
         // TODO: zabraniti brisanje ako je artikal u nekoj narudzbini
 
-        this.artikli.remove(artikal);
-        this.restorani.get(restoran).getArtikli().remove(artikal);
+        this.artikli.get(artikal).setAktivan(false);
+        //this.restorani.get(restoran).getArtikli().remove(artikal);
         return true;
     }
 

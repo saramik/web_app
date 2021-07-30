@@ -346,12 +346,13 @@ public class Main {
 
 		// svi restorani
 		get("/restorani", (req, res) -> {
-			// prvo oni koji su otvoreni
+			res.type("application/json");
 			List<RestoranDTO> restorani = aplikacija.dobaviSveRestorane();
 			return g.toJson(restorani);
 		});
 
 		get("/pretragaRestorana", (req, res) -> {
+			res.type("application/json");
 			// pretraga po nazivu, tipu, lokaciji (grad ili drzava), prosecna ocena
 
 			// prikazati naziv tip lokaciju logo prosecnu ocenu
@@ -378,6 +379,25 @@ public class Main {
 			List<String> menadzeri = aplikacija.dobaviSlobodneMenadzere();
 			res.status(200);
 			return g.toJson(menadzeri);
+		});
+
+		delete("/brisanjeRestorana/:restoran", (req, res) -> {
+			res.type("application/json");
+			int indicator = isAdministrator(req);
+			if (indicator != 1){
+				res.status(indicator);
+				return "";
+			}
+			try {
+				String restoran = req.params("restoran");
+				aplikacija.obrisiRestoran(restoran);
+				res.status(200);
+				return "";
+			} catch(Exception e) {
+				res.status(400);
+				return e.getMessage();
+			}
+
 		});
 
 
@@ -411,9 +431,11 @@ public class Main {
 				res.status(403);
 				return "";
 			}
-			Artikal dto = g.fromJson(req.body(), Artikal.class);
-			dto.setRestoran(((Menadzer) trenutniKorisnik).getRestoran());
+
 			try {
+				Artikal dto = g.fromJson(req.body(), Artikal.class);
+				dto.setRestoran(((Menadzer) trenutniKorisnik).getRestoran());
+				dto.setAktivan(true);
 				Artikal a = aplikacija.dodajArtikalRestoranu(dto);
 				res.status(200);
 				return g.toJson(a);

@@ -20,9 +20,10 @@ public class Restoran {
     private long otvorenoOd;        // u minutima
     private long otvorenoDo;        // u minutima
 
+    private boolean aktivan;
 
     public Restoran(){
-
+        aktivan = true;
     }
 
     public Restoran(String naziv, TipRestorana tip, Lokacija lokacija, String logo, long otvorenoOd, long otvorenoDo) {
@@ -34,6 +35,15 @@ public class Restoran {
         this.otvorenoDo = otvorenoDo;
         // dodato
         this.artikli = new ArrayList<>();
+        this.aktivan = true;
+    }
+
+    public boolean isAktivan() {
+        return aktivan;
+    }
+
+    public void setAktivan(boolean aktivan) {
+        this.aktivan = aktivan;
     }
 
     public long getOtvorenoOd() {

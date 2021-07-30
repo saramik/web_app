@@ -11,8 +11,10 @@ public class Artikal {
     private String slika;
 
     private String restoran;
+    private boolean aktivan;
 
     public Artikal() {
+        this.aktivan = true;
     }
 
     public Artikal(String naziv, double cena, TipArtikla tip, double kolicina, String opis, String slika, String restoran) {
@@ -23,6 +25,15 @@ public class Artikal {
         this.opis = opis;
         this.slika = slika;
         this.restoran = restoran;
+        this.aktivan = true;
+    }
+
+    public boolean isAktivan() {
+        return aktivan;
+    }
+
+    public void setAktivan(boolean aktivan) {
+        this.aktivan = aktivan;
     }
 
     public String getId() {
