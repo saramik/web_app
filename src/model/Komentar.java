@@ -8,9 +8,18 @@ public class Komentar {
     private String tekst;
     private int ocena;
     private Status status;
+    private Boolean aktivan;
 
     public Komentar(){
+        aktivan = true;
+    }
 
+    public Boolean getAktivan() {
+        return aktivan;
+    }
+
+    public void setAktivan(Boolean aktivan) {
+        this.aktivan = aktivan;
     }
 
     public String getId() {

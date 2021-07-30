@@ -100,7 +100,11 @@ public class Main {
 		//upisUFajl();
 		
 		staticFiles.externalLocation(new File("./static").getCanonicalPath());
-		
+
+
+		//
+		// ------------------ KORISNICI --------------------
+		//
 		
 		post("/login", (req, res) -> {
 			 res.type("application/json");
@@ -278,6 +282,47 @@ public class Main {
 		});
 
 
+		//
+		// ------------------ RESTORANI --------------------
+		//
+
+		// dobavljanje restorana po nazivu
+		get("/restorani/:restoran", (req, res) -> {
+			res.type("application/json");
+			try {
+				String r = req.params("restoran");
+				RestoranDTO restoran = aplikacija.dobaviRestoran(r);
+				return g.toJson(restoran);
+			} catch(Exception e) {
+				res.status(200);
+				return e.getMessage();
+			}
+		});
+
+		// dobavljanje restorana za koji je zaduzen menadzer
+		get("/restorani/m/mojRestoran", (req, res) -> {
+			// null ako mu nije dodeljen restoran
+			res.type("application/json");
+			Session ss = req.session(true);
+			Korisnik trenutniKorisnik = ss.attribute("user");
+			if(trenutniKorisnik == null) {
+				res.status(401);
+				return "";
+			}
+			else if (!(trenutniKorisnik instanceof Menadzer)) {
+				res.status(403);
+				return "";
+			}
+			String r = ((Menadzer) trenutniKorisnik).getRestoran();
+			try {
+				RestoranDTO restoran = aplikacija.dobaviRestoran(r);
+				return g.toJson(restoran);
+			} catch(Exception e) {
+				res.status(200);
+				return e.getMessage();
+			}
+		});
+
 		post("/kreiranjeRestorana", (req, res) -> {
 			// naziv, tip, lokacija, logo, menadzer
 			res.type("application/json");
@@ -299,6 +344,7 @@ public class Main {
 
 		});
 
+		// svi restorani
 		get("/restorani", (req, res) -> {
 			// prvo oni koji su otvoreni
 			List<RestoranDTO> restorani = aplikacija.dobaviSveRestorane();
@@ -333,6 +379,11 @@ public class Main {
 			res.status(200);
 			return g.toJson(menadzeri);
 		});
+
+
+		//
+		// ------------------ ARTIKLI --------------------
+		//
 
 		get("/artikli/:idRestorana", (req, res) -> {
 			res.type("application/json");
@@ -419,6 +470,12 @@ public class Main {
 				return e.getMessage();
 			}
 		});
+
+
+
+		//
+		// ------------------ PORUDZBINE --------------------
+		//
 
 		// ovo jos malo istestirati
 		get("/porudzbine", (req, res) -> {
@@ -542,6 +599,7 @@ public class Main {
 		});
 
 		put("/odgovoriNaZahtev/:zahtev", (req, res) -> {
+			res.type("application/json");
 			Session ss = req.session(true);
 			Korisnik trenutniKorisnik = ss.attribute("user");
 			if(trenutniKorisnik == null) {
@@ -568,6 +626,7 @@ public class Main {
 		});
 
 		get("/zahtevi", (req, res) -> {
+			res.type("application/json");
 			Session ss = req.session(true);
 			Korisnik trenutniKorisnik = ss.attribute("user");
 			if(trenutniKorisnik == null) {
@@ -594,9 +653,13 @@ public class Main {
 
 		// filter i pretragu uraditi
 
-		// komentari
+
+		//
+		// ------------------ KOMENTARI --------------------
+		//
 
 		post("/komentar/:restoran", (req, res) -> {
+			res.type("application/json");
 			Session ss = req.session(true);
 			Korisnik trenutniKorisnik = ss.attribute("user");
 			if(trenutniKorisnik == null) {
@@ -611,8 +674,12 @@ public class Main {
 				Komentar komentar = g.fromJson(req.body(), Komentar.class);
 				komentar.setKorisnik(trenutniKorisnik.getKorisnickoIme());
 				String restoran = req.params("restoran");
-				aplikacija.proveriKorisnikaZaKomentar(trenutniKorisnik, restoran);
-				aplikacija.dodajKomentar(komentar);
+				if (restoran != null)
+					komentar.setRestoran(restoran);
+				else throw new Exception("Bad request!");
+				if  (aplikacija.proveriKorisnikaZaKomentar(trenutniKorisnik, restoran))
+					aplikacija.dodajKomentar(komentar);
+				else throw new Exception("Ne mozete oceniti taj restoran");
 				res.status(200);
 				return "";
 			} catch (Exception e){
@@ -622,13 +689,99 @@ public class Main {
 		});
 
 		put("/resiKomentar/:komentar/:odobren", (req, res) -> {
-			//aplikacija.resiKomentar(komentar, odobren);
-			return "";
+			res.type("application/json");
+			Session ss = req.session(true);
+			Korisnik trenutniKorisnik = ss.attribute("user");
+			if(trenutniKorisnik == null) {
+				res.status(401);
+				return "";
+			}
+			if (!(trenutniKorisnik instanceof Menadzer)){
+				res.status(403);
+				return "";
+			}
+			try {
+				String komentar = req.params("komentar");
+				boolean odobren = Boolean.parseBoolean(req.params("odobren"));
+				aplikacija.resiKomentar(komentar, odobren);
+				res.status(200);
+				return "";
+			} catch(Exception e){
+				res.status(400);
+				return e.getMessage();
+			}
+
 		});
 
 		get("/komentari/:restoran", (req, res) -> {
-			//aplikacija.dobaviKomentareRestorana(restoran);
-			return "";
+			res.type("application/json");
+			Session ss = req.session(true);
+			Korisnik trenutniKorisnik = ss.attribute("user");
+
+			try {
+				String restoran = req.params("restoran");
+				List<Komentar> komentari;
+				// kupac/dostavljac vide samo odobrene komentare
+				if ((trenutniKorisnik instanceof Kupac) || (trenutniKorisnik instanceof Dostavljac) || trenutniKorisnik == null){
+					komentari = aplikacija.dobaviKomentareRestorana(restoran, false);
+				}
+				else {		// ako je menadzer ili administrator, vidi sve komentare
+					komentari = aplikacija.dobaviKomentareRestorana(restoran, true);
+				}
+				res.status(200);
+				return g.toJson(komentari);
+			} catch (Exception e){
+				res.status(400);
+				return e.getMessage();
+			}
+		});
+
+		// true ili false, da li kupac moze da oceni neki restoran, za front treba
+		get("/komentari/kupac/proveri/:restoran", (req, res) -> {
+			res.type("application/json");
+			Session ss = req.session(true);
+			Korisnik trenutniKorisnik = ss.attribute("user");
+			if(trenutniKorisnik == null) {
+				res.status(401);
+				return "";
+			}
+			if (!(trenutniKorisnik instanceof Kupac)){
+				res.status(403);
+				return "";
+			}
+			try {
+				String restoran = req.params("restoran");
+				boolean sme = aplikacija.proveriKorisnikaZaKomentar(trenutniKorisnik, restoran);
+				res.status(200);
+				return sme;
+			} catch (Exception e){
+				res.status(400);
+				return e.getMessage();
+			}
+
+		});
+
+		delete("/komentari/:komentar", (req, res) -> {
+			res.type("application/json");
+			Session ss = req.session(true);
+			Korisnik trenutniKorisnik = ss.attribute("user");
+			if(trenutniKorisnik == null) {
+				res.status(401);
+				return "";
+			}
+			if (!(trenutniKorisnik instanceof Kupac)){
+				res.status(403);
+				return "";
+			}
+			try {
+				String komentar = req.params("komentar");
+				aplikacija.obrisiKomentar(komentar, trenutniKorisnik.getKorisnickoIme());
+				res.status(200);
+				return "";
+			} catch (Exception e){
+				res.status(400);
+				return e.getMessage();
+			}
 		});
 
 

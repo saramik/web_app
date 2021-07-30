@@ -36,11 +36,14 @@ public class Aplikacija {
         menadzeri.get("menadzerko").setRestoran("r1");
 
         menadzeri.put("m", new Menadzer("m", "lozinka", "d", "d",Pol.ZENSKI, 1000));
-
+        menadzeri.get("menadzerko").setRestoran("r2");
 
         Lokacija l = new Lokacija();
         Restoran r = new Restoran("r1", TipRestorana.ITALIJANSKI, l, "", 480l, 900l);
         restorani.put(r.getNaziv(), r);
+
+        Restoran r2 = new Restoran("r2", TipRestorana.ITALIJANSKI, l, "", 480l, 900l);
+        restorani.put(r2.getNaziv(), r2);
 
         Artikal a = new Artikal("a1", 10.0, TipArtikla.JELO, 0.0, "opis a1", "", "r1");
         a.setId("123");
@@ -59,6 +62,11 @@ public class Aplikacija {
         Porudzbina pe = new Porudzbina("54321", "r1", 123123, 10.0, "kupac2", StatusPorudzbine.U_PRIPREMI);
         porudzbine.put(pe.getId(), pe);
         this.kupci.get("kupac2").getPorudzbine().add("54321");
+
+
+        Porudzbina p2 = new Porudzbina("123", "r2", 123123, 10.0, "kupac2", StatusPorudzbine.DOSTAVLJENA);
+        porudzbine.put(p2.getId(), p2);
+        this.kupci.get("kupac2").getPorudzbine().add("123");
 
     }
 
@@ -763,18 +771,30 @@ public class Aplikacija {
 
     public boolean proveriKorisnikaZaKomentar(Korisnik trenutniKorisnik, String restoran) throws Exception {
 	    // da li ima ijednu porudzbinu iz tog restorana koja je dostavljena
+        // ako ima i ako nema komentar na taj restoran, moze da oceni
         if (!this.restorani.containsKey(restoran)) throw new Exception("Nema tog restorana!");
+        boolean dostavljeno = false;
         for (String porudzbina: kupci.get(trenutniKorisnik.getKorisnickoIme()).getPorudzbine()){
             Porudzbina p = this.porudzbine.get(porudzbina);
-            if (p.getStatus().equals(StatusPorudzbine.DOSTAVLJENA) && p.getRestoran().equals(restoran))
-                return true;
+            if (p.getStatus().equals(StatusPorudzbine.DOSTAVLJENA) && p.getRestoran().equals(restoran)) {
+                dostavljeno = true;
+                break;
+            }
         }
-        throw new Exception("Ne mozete oceniti ovaj restoran!");
+        if (!dostavljeno) return false;
+        for (Komentar k: komentari.values()){       // i ako je kom neobrisan, status prihvacen
+            if (!k.getAktivan()) continue;
+            if (k.getRestoran().equals(restoran) && k.getKorisnik().equals(trenutniKorisnik.getKorisnickoIme()) &&
+                !k.getStatus().equals(Status.ODBIJENO))
+                return false;
+        }
+        return true;
     }
 
     public void dodajKomentar(Komentar komentar) {
 	    // id, postavi status, restoran proveri
         komentar.setStatus(Status.NA_CEKANJU);
+        komentar.setAktivan(true);
         komentar.setId(new Random().nextInt(2000) + "");
         this.komentari.put(komentar.getId(), komentar);
     }
@@ -784,6 +804,7 @@ public class Aplikacija {
 	    List<Komentar> komentari = new ArrayList<Komentar>();
 	    for (Komentar k: this.komentari.values()){
 	        if (k.getRestoran().equals(restoran)){
+	            if (!k.getAktivan()) continue;   // ako je obrisan
                 if (!svi){  // samo prihvaceni
                     if (k.getStatus().equals(Status.PRIHVACENO)) komentari.add(k);
                 }
@@ -795,8 +816,32 @@ public class Aplikacija {
 	    return komentari;
     }
 
-    public boolean resiKomentar(String komentar, boolean prihvacen){
+    public boolean obrisiKomentar(String komentar, String korisnickoIme) throws Exception {
+	    Komentar k = komentari.get(komentar);
+	    if (k == null)  throw new Exception("Nepostojeci komentar!");
+	    if (!k.getKorisnik().equals(korisnickoIme)) throw new Exception("Ne mozete obrisati ovaj komentar!");
+	    k.setAktivan(false);
+	    // promeniti ocenu restorana
+        Restoran r = restorani.get(k.getRestoran());
+        if (r.getBrojOcena() == 1){
+            r.setBrojOcena(0);
+            r.setOcena(0.0);
+            return true;
+        }
+        int stariBrojOcena = r.getBrojOcena();
+        double staraOcena = r.getOcena();
+        double novaOcena = (staraOcena * stariBrojOcena - k.getOcena())/(stariBrojOcena - 1);
+        r.setOcena(novaOcena);
+        r.setBrojOcena(stariBrojOcena - 1);
+        return true;
+    }
+
+    public boolean resiKomentar(String komentar, boolean prihvacen) throws Exception {
 	    Komentar k = this.komentari.get(komentar);
+
+	    if (!k.getStatus().equals(Status.NA_CEKANJU))
+	        throw new Exception("Ovaj komentar nije na cekanju!");
+
 	    if (!prihvacen){
 	        k.setStatus(Status.ODBIJENO);
 	        return true;
@@ -810,6 +855,11 @@ public class Aplikacija {
         double noviProsek = (stariProsek * stariBrojOcena + k.getOcena())/(stariBrojOcena + 1);
         r.setOcena(noviProsek);
         return true;
+    }
+
+    public RestoranDTO dobaviRestoran(String r) throws Exception {
+	    if (!this.restorani.containsKey(r)) throw new Exception("Nepostojeci restoran!");
+	    return new RestoranDTO(this.restorani.get(r));
     }
 
     // mozda svi zahtevi za jednu porudzbinu
