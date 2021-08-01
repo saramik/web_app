@@ -43,7 +43,7 @@ public class Aplikacija {
         r.setMenadzer("menadzerko");
         restorani.put(r.getNaziv(), r);
 
-        Restoran r2 = new Restoran("r2", TipRestorana.ITALIJANSKI, l, "", 480l, 900l);
+        Restoran r2 = new Restoran("r2", TipRestorana.KINESKI, l, "", 480l, 900l);
         restorani.put(r2.getNaziv(), r2);
         r2.setMenadzer("m");
 
@@ -54,21 +54,25 @@ public class Aplikacija {
         artikli.put("123", a);
 
 
-        Porudzbina p = new Porudzbina("12345", "r1", 123123, 10.0, "kupac1", StatusPorudzbine.CEKA_DOSTAVLJACA);
+        Porudzbina p = new Porudzbina("12345", "r1", 1000, 100.0, "kupac1", StatusPorudzbine.CEKA_DOSTAVLJACA);
         porudzbine.put(p.getId(), p);
         this.kupci.get("kupac1").getPorudzbine().add("12345");
         p.getArtikli().add(new ArtikalPorudzbenica("111", "artikal1", 1, 123));
         p.getArtikli().add(new ArtikalPorudzbenica("222", "artikal2", 1, 123));
 
 
-        Porudzbina pe = new Porudzbina("54321", "r1", 123123, 10.0, "kupac2", StatusPorudzbine.U_PRIPREMI);
+        Porudzbina pe = new Porudzbina("54321", "r1", 20000, 150.0, "kupac2", StatusPorudzbine.U_PRIPREMI);
         porudzbine.put(pe.getId(), pe);
         this.kupci.get("kupac2").getPorudzbine().add("54321");
 
 
-        Porudzbina p2 = new Porudzbina("123", "r2", 123123, 10.0, "kupac2", StatusPorudzbine.DOSTAVLJENA);
+        Porudzbina p2 = new Porudzbina("123", "r2", 5, 10.0, "kupac2", StatusPorudzbine.DOSTAVLJENA);
         porudzbine.put(p2.getId(), p2);
         this.kupci.get("kupac2").getPorudzbine().add("123");
+
+        Porudzbina p3 = new Porudzbina("321", "r1", 123123, 3300.0, "kupac2", StatusPorudzbine.DOSTAVLJENA);
+        porudzbine.put(p3.getId(), p3);
+        this.kupci.get("kupac2").getPorudzbine().add("321");
 
     }
 
@@ -597,12 +601,13 @@ public class Aplikacija {
 	    return porudzbineDTO;
     }
 
-    public List<PorudzbinaDTO> dobaviPorudzbineDostavljaca(String korisnickoIme) {
+    public List<PorudzbinaDTO> dobaviPorudzbineDostavljaca(String korisnickoIme, boolean samoNedostavljene) {
         List<PorudzbinaDTO> porudzbineDTO = new ArrayList<>();
 	    // njegove porudzbine
         for (String p: this.dostavljaci.get(korisnickoIme).getPorudzbine()){
 	        Porudzbina porudzbina = this.porudzbine.get(p);
-	        porudzbineDTO.add(toPorudzbinaDTO(porudzbina));
+	        if (samoNedostavljene && porudzbina.getStatus().equals(StatusPorudzbine.DOSTAVLJENA)) continue;
+            porudzbineDTO.add(toPorudzbinaDTO(porudzbina));
         }
         // porudzbine koje nemaju dostavljaca
 	    for (Porudzbina p: porudzbine.values()){
@@ -616,11 +621,12 @@ public class Aplikacija {
 
 
     // nedostavljene su filter
-    public List<PorudzbinaDTO> dobaviPorudzbineKupca(String korisnickoIme) {
+    public List<PorudzbinaDTO> dobaviPorudzbineKupca(String korisnickoIme, boolean samoNedostavljene) {
         List<PorudzbinaDTO> porudzbineDTO = new ArrayList<>();
 
         for (String p: kupci.get(korisnickoIme).getPorudzbine()){
             Porudzbina porudzbina = this.porudzbine.get(p);
+            if (samoNedostavljene && porudzbina.getStatus().equals(StatusPorudzbine.DOSTAVLJENA)) continue;
             porudzbineDTO.add(toPorudzbinaDTO(porudzbina));
         }
         return porudzbineDTO;
@@ -874,6 +880,77 @@ public class Aplikacija {
     public RestoranDTO dobaviRestoran(String r) throws Exception {
 	    if (!this.restorani.containsKey(r)) throw new Exception("Nepostojeci restoran!");
 	    return new RestoranDTO(this.restorani.get(r));
+    }
+
+    public List<PorudzbinaDTO> pretragaPorudzbina(Korisnik korisnik, String restoran, Double cenaOd, Double cenaDo, Long datumOd, Long datumDo, TipRestorana tipRestorana, StatusPorudzbine statusPorudzbine, String sort) throws Exception {
+        List<PorudzbinaDTO> porudzbine = this.porudzbineNaOsnovuKorisnika(korisnik);
+        List<PorudzbinaDTO> porudzbinePretrazene = new ArrayList<>();
+        for (PorudzbinaDTO p: porudzbine){
+            if (restoran != null && !restoran.equals("")){
+                if (!p.getRestoran().toLowerCase().contains(restoran.toLowerCase())) continue;
+            }
+            if (cenaOd != null) {
+                if (p.getCena() < cenaOd) continue;
+            }
+            if (cenaDo != null){
+                if (p.getCena() > cenaDo) continue;
+            }
+            if (datumOd != null){
+                if (p.getDatum() < datumOd) continue;
+            }
+            if (datumDo != null) {
+                if (p.getDatum() > datumDo) continue;
+            }
+            if (tipRestorana != null){
+                TipRestorana tr = this.restorani.get(p.getRestoran()).getTip();
+                if (!tipRestorana.equals(tr)) continue;
+            }
+            if (statusPorudzbine != null) {
+                if (!p.getStatus().equals(statusPorudzbine)) continue;
+            }
+            porudzbinePretrazene.add(p);
+        }
+        sortirajPorudzbine(porudzbinePretrazene, sort);
+        return porudzbinePretrazene;
+	}
+
+	public List<PorudzbinaDTO> porudzbineNaOsnovuKorisnika(Korisnik korisnik) throws Exception {
+
+        if (korisnik instanceof Kupac) return this.dobaviPorudzbineKupca(korisnik.getKorisnickoIme(), false);
+        if (korisnik instanceof Dostavljac) return this.dobaviPorudzbineDostavljaca(korisnik.getKorisnickoIme(), false);
+        if (korisnik instanceof Menadzer) return this.dobaviPorudzbineMenadzera(korisnik.getKorisnickoIme());
+        // admin vidi sve porudzbine
+        List<PorudzbinaDTO> porudzbine = new ArrayList<>();
+        for (Porudzbina p: this.porudzbine.values()){
+               porudzbine.add(toPorudzbinaDTO(p));
+        }
+        return porudzbine;
+    }
+
+
+    private void sortirajPorudzbine(List<PorudzbinaDTO> porudzbine, String sort) {
+
+        if (sort.equals("imeRestoranaRastuce")) {
+            Collections.sort(porudzbine, (PorudzbinaDTO p1, PorudzbinaDTO p2) -> {
+                return p1.getRestoran().compareToIgnoreCase(p2.getRestoran());
+            });
+        } else if (sort.equals("imeRestoranaOpadajuce")) {
+            Collections.sort(porudzbine, (PorudzbinaDTO p1, PorudzbinaDTO p2) -> {
+                return p2.getRestoran().compareToIgnoreCase(p1.getRestoran());
+            });
+        }
+        else if (sort.equals("cenaOpadajuce")){
+            Collections.sort(porudzbine, (PorudzbinaDTO p1, PorudzbinaDTO p2) -> Double.compare(p2.getCena(), p1.getCena()));
+        }
+        else if (sort.equals("cenaRastuce")){
+            Collections.sort(porudzbine, (PorudzbinaDTO p1, PorudzbinaDTO p2) -> Double.compare(p1.getCena(), p2.getCena()));
+        }
+        else if (sort.equals("datumOpadajuce")){
+            Collections.sort(porudzbine, (PorudzbinaDTO p1, PorudzbinaDTO p2) -> Long.compare(p2.getDatum(), p1.getDatum()));
+        }
+        else if (sort.equals("datumRastuce")){
+            Collections.sort(porudzbine, (PorudzbinaDTO p1, PorudzbinaDTO p2) -> Long.compare(p1.getDatum(), p2.getDatum()));
+        }
     }
 
     // mozda svi zahtevi za jednu porudzbinu

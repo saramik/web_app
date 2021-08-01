@@ -529,14 +529,17 @@ public class Main {
 					return e.getMessage();
 				}
 			}
-
+			boolean samoNedostavljene = false;
+			try {
+				samoNedostavljene = Boolean.parseBoolean(req.queryParams("nedostavljene"));
+			} catch (Exception e){}
 			if (trenutniKorisnik instanceof Dostavljac){
-				List<PorudzbinaDTO> porudzbine = aplikacija.dobaviPorudzbineDostavljaca(korisnickoIme);
+				List<PorudzbinaDTO> porudzbine = aplikacija.dobaviPorudzbineDostavljaca(korisnickoIme, samoNedostavljene);
 				return g.toJson(porudzbine);
 			}
 
 			if (trenutniKorisnik instanceof Kupac){
-				List<PorudzbinaDTO> porudzbine = aplikacija.dobaviPorudzbineKupca(korisnickoIme);
+				List<PorudzbinaDTO> porudzbine = aplikacija.dobaviPorudzbineKupca(korisnickoIme, samoNedostavljene);
 				return g.toJson(porudzbine);
 			}
 			return "";
@@ -684,7 +687,43 @@ public class Main {
 		});
 
 
-		// filter i pretragu uraditi
+		get("/pretragaPorudzbina", (req, res) -> {
+			res.type("application/json");
+			Session ss = req.session(true);
+			Korisnik trenutniKorisnik = ss.attribute("user");
+			if(trenutniKorisnik == null) {
+				res.status(401);
+				return "";
+			}
+
+			double cenaOd = 0.0;
+			double cenaDo = 10000000.0;
+			long datumOd = 0;
+			long datumDo = 10000000000000000l;
+			TipRestorana tipRestorana = null;
+			StatusPorudzbine statusPorudzbine = null;
+			try{ cenaOd = Double.parseDouble(req.queryParams("cenaOd")); }catch(Exception e){}
+			try{ cenaDo = Double.parseDouble(req.queryParams("cenaDo"));} catch(Exception e){}
+			try{ datumOd = Long.parseLong(req.queryParams("datumOd")); }catch(Exception e){}
+			try{ datumDo = Long.parseLong(req.queryParams("datumDo")); }catch(Exception e){}
+			try{ tipRestorana = TipRestorana.valueOf(req.queryParams("tipRestorana"));} catch(Exception e){}
+			try{ statusPorudzbine = StatusPorudzbine.valueOf(req.queryParams("statusPorudzbine"));} catch(Exception e){}
+
+
+
+			try {
+				String restoran = req.queryParams("restoran");
+
+				String sort = req.queryParams("sort");
+
+				List<PorudzbinaDTO> porudzbine = aplikacija.pretragaPorudzbina(trenutniKorisnik,
+						restoran, cenaOd, cenaDo, datumOd, datumDo, tipRestorana, statusPorudzbine, sort);
+				return g.toJson(porudzbine);
+			} catch (Exception e){
+				res.status(400);
+				return e.getMessage();
+			}
+		});
 
 
 		//
