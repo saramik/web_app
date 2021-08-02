@@ -8,9 +8,10 @@ public class Korisnik {
 	private String prezime;
 	private Pol pol;
 	private long datumRodjenja;
+	private boolean aktivan;
 
 	public Korisnik(){
-
+		this.aktivan = true;
 	}
 
 	public Korisnik(String korisnickoIme, String lozinka, String ime, String prezime, Pol pol, long datumRodjenja) {
@@ -20,6 +21,15 @@ public class Korisnik {
 		this.prezime = prezime;
 		this.pol = pol;
 		this.datumRodjenja = datumRodjenja;
+		this.aktivan = true;
+	}
+
+	public boolean isAktivan() {
+		return aktivan;
+	}
+
+	public void setAktivan(boolean aktivan) {
+		this.aktivan = aktivan;
 	}
 
 	public String getKorisnickoIme() {

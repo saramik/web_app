@@ -108,22 +108,26 @@ public class Aplikacija {
 
 	    if (this.administratori.containsKey(korisnickoIme)){
 	        Administrator admin = this.administratori.get(korisnickoIme);
+	        if (!admin.isAktivan()) throw new Exception("Neaktivan korisnik!");
 	        if (admin.getLozinka().equals(lozinka)) return admin;
 	        else throw new Exception("Losi kredencijali!");
         }
 	    if (this.menadzeri.containsKey(korisnickoIme)){
             Menadzer menadzer = this.menadzeri.get(korisnickoIme);
+            if (!menadzer.isAktivan()) throw new Exception("Neaktivan korisnik!");
             if (menadzer.getLozinka().equals(lozinka)) return menadzer;
             else throw new Exception("Losi kredencijali!");
         }
 
         if (this.dostavljaci.containsKey(korisnickoIme)){
             Dostavljac dostavljac = this.dostavljaci.get(korisnickoIme);
+            if (!dostavljac.isAktivan()) throw new Exception("Neaktivan korisnik!");
             if (dostavljac.getLozinka().equals(lozinka)) return dostavljac;
             else throw new Exception("Losi kredencijali!");
         }
         if (this.kupci.containsKey(korisnickoIme)){
             Kupac kupac = this.kupci.get(korisnickoIme);
+            if (!kupac.isAktivan()) throw new Exception("Neaktivan korisnik!");
             if (kupac.getLozinka().equals(lozinka)) return kupac;
             else throw new Exception("Losi kredencijali!");
         }
@@ -201,22 +205,22 @@ public class Aplikacija {
 
 	    List<KorisnikProsirenoDTO> korisnici = new ArrayList<KorisnikProsirenoDTO>();
 
-	    for (String s: administratori.keySet()){
-	        Administrator a = administratori.get(s);
-	        korisnici.add(new KorisnikProsirenoDTO(s, a.getIme(), a.getPrezime(), a.getPol(), a.getDatumRodjenja(), Uloga.ADMINISTRATOR, null, -1));
+	    for (Administrator a: administratori.values()){
+	        if (!a.isAktivan()) continue;
+	        korisnici.add(new KorisnikProsirenoDTO(a.getKorisnickoIme(), a.getIme(), a.getPrezime(), a.getPol(), a.getDatumRodjenja(), Uloga.ADMINISTRATOR, null, -1));
         }
-        for (String s: menadzeri.keySet()){
-            Menadzer m = menadzeri.get(s);
-            korisnici.add(new KorisnikProsirenoDTO(s, m.getIme(), m.getPrezime(), m.getPol(), m.getDatumRodjenja(), Uloga.MENADZER, null, -1));
+        for (Menadzer m: menadzeri.values()){
+            if (!m.isAktivan()) continue;
+            korisnici.add(new KorisnikProsirenoDTO(m.getKorisnickoIme(), m.getIme(), m.getPrezime(), m.getPol(), m.getDatumRodjenja(), Uloga.MENADZER, null, -1));
         }
-        for (String s: dostavljaci.keySet()){
-            Dostavljac d = dostavljaci.get(s);
-            korisnici.add(new KorisnikProsirenoDTO(s, d.getIme(), d.getPrezime(), d.getPol(), d.getDatumRodjenja(), Uloga.DOSTAVLJAC, null, -1));
+        for (Dostavljac d: dostavljaci.values()){
+            if (!d.isAktivan()) continue;
+            korisnici.add(new KorisnikProsirenoDTO(d.getKorisnickoIme(), d.getIme(), d.getPrezime(), d.getPol(), d.getDatumRodjenja(), Uloga.DOSTAVLJAC, null, -1));
         }
 
-        for (String s: kupci.keySet()){
-            Kupac k = kupci.get(s);
-            korisnici.add(new KorisnikProsirenoDTO(s, k.getIme(), k.getPrezime(), k.getPol(), k.getDatumRodjenja(), Uloga.KUPAC, k.getTipKupca().getImeTipa(), k.getSakupljeniBodovi()));
+        for (Kupac k: kupci.values()){
+            if (!k.isAktivan()) continue;
+            korisnici.add(new KorisnikProsirenoDTO(k.getKorisnickoIme(), k.getIme(), k.getPrezime(), k.getPol(), k.getDatumRodjenja(), Uloga.KUPAC, k.getTipKupca().getImeTipa(), k.getSakupljeniBodovi()));
         }
 
 	    return korisnici;
@@ -289,17 +293,19 @@ public class Aplikacija {
 
     }
 
-    public Korisnik izmeniPodatke(KorisnikDTO k) {
+    public Korisnik izmeniPodatke(KorisnikDTO k) throws Exception {
 
 	    String username = k.getKorisnickoIme();
 
-	    if (k.getIme().isEmpty() || k.getPrezime().isEmpty()){  // jos neke provere
-	        return null;
+	    if (k.getIme() == null || k.getIme().isEmpty()
+                ||k.getPrezime() == null || k.getPrezime().isEmpty()
+                || k.getPol() == null){
+	        throw new Exception("Nevalidan dto!");
         }
 
 	    Korisnik korisnik = this.dobaviKorisnikaPoKorisnickomImenu(username);
 	    if (korisnik == null){
-	        return null;
+            throw new Exception("Nevalidan dto!");
         }
 	    korisnik.setDatumRodjenja(k.getDatumRodjenja());
 	    korisnik.setIme(k.getIme());
@@ -312,9 +318,15 @@ public class Aplikacija {
 
 	    Korisnik k = dobaviKorisnikaPoKorisnickomImenu(korisnickoIme);
 
+	    if (!k.isAktivan()) throw new Exception("Neaktivan korisnik!");
+
 	    if (k == null) {
 	        throw new Exception("Ne postoji korisnik");
         }
+
+	    if (novaLozinka == null || novaLozinka.equals("")) throw new Exception("Nevalidna nova lozinka!");
+
+	    //if (novaLozinka.length() <= 7) throw new Exception("Nova lozinka mora imati barem 8 karaktera!");
 
 	    if (k.getLozinka().equals(staraLozinka)){
 	        k.setLozinka(novaLozinka);
@@ -329,16 +341,24 @@ public class Aplikacija {
     public Korisnik dobaviKorisnikaPoKorisnickomImenu(String korisnickoIme){
 
 	    if (this.administratori.containsKey(korisnickoIme)) {
-            return this.administratori.get(korisnickoIme);
+	        Administrator a = this.administratori.get(korisnickoIme);
+	        if (!a.isAktivan()) return null;
+            return a;
         }
         if (this.menadzeri.containsKey(korisnickoIme)){
-            return this.menadzeri.get(korisnickoIme);
+            Menadzer m = this.menadzeri.get(korisnickoIme);
+            if (!m.isAktivan()) return null;
+            return m;
         }
         if (this.dostavljaci.containsKey(korisnickoIme)){
-            return this.dostavljaci.get(korisnickoIme);
+            Dostavljac d = this.dostavljaci.get(korisnickoIme);
+            if (!d.isAktivan()) return null;
+            return d;
         }
         if (this.kupci.containsKey(korisnickoIme)){
-            return this.kupci.get(korisnickoIme);
+            Kupac k = this.kupci.get(korisnickoIme);
+            if (!k.isAktivan()) return null;
+            return k;
         }
 
 	    return null;
@@ -376,8 +396,15 @@ public class Aplikacija {
     }
 
     private static boolean proveriRestoranDTO(RestoranDTO dto){
-	    // TODO
-	    return true;
+        // naziv tip lokacija logo su obavezni
+        if (dto.getNaziv() == null || dto.getNaziv().equals("")) return false;
+        if (dto.getLogo() == null || dto.getLogo().equals("")) return false;
+        try { TipRestorana.valueOf(dto.getTip()); } catch (Exception e) { return false; }
+        if (dto.getUlica() == null || dto.getUlica().equals("")) return false;
+        if (dto.getBroj() == null || dto.getBroj().equals("")) return false;
+        if (dto.getMesto() == null || dto.getMesto().equals("")) return false;
+        if (dto.getPostanskiBroj() == null || dto.getPostanskiBroj().equals("")) return false;
+        return true;
     }
 
     public List<RestoranDTO> pretragaRestorana(String pretraga, String tip, String otvoren, String sort){
@@ -568,14 +595,10 @@ public class Aplikacija {
 	    return true;
     }
 
-    public boolean obrisiArtikal(String artikal, String restoran) throws Exception {
+    public boolean obrisiArtikal(String artikal) throws Exception {
 
         if (!this.artikli.containsKey(artikal)){
             throw new Exception("Ovaj artikal ne postoji!");
-        }
-
-        if (!this.artikli.get(artikal).getRestoran().equals(restoran)){
-            throw new Exception("Moguce je obrisati artikal samo iz restorana kojim menadzer rukovodi!");
         }
 
         // TODO: zabraniti brisanje ako je artikal u nekoj narudzbini
@@ -587,7 +610,12 @@ public class Aplikacija {
 
 
     private boolean proveriArtikal(Artikal artikal) {
-	    // TODO: proveriti da li su vrednosti dozvoljene
+        // naziv cena tip slika, opis i kolicina opcioni
+        if (artikal.getNaziv() == null || artikal.getNaziv().equals("")) return false;
+        if (artikal.getSlika() == null || artikal.getSlika().equals("")) return false;
+        if (artikal.getCena() < 0) return false;
+        if (artikal.getKolicina() != null) if (artikal.getKolicina() < 0) return false;
+        if (artikal.getTip() == null) return false;
 	    return true;
     }
 
@@ -811,12 +839,19 @@ public class Aplikacija {
         return true;
     }
 
-    public void dodajKomentar(Komentar komentar) {
+    public void dodajKomentar(Komentar komentar) throws Exception{
 	    // id, postavi status, restoran proveri
+        if (!proveriKomentar(komentar)) throw new Exception("Nevalidan dto!");
         komentar.setStatus(Status.NA_CEKANJU);
         komentar.setAktivan(true);
         komentar.setId(new Random().nextInt(2000) + "");
         this.komentari.put(komentar.getId(), komentar);
+    }
+
+    private boolean proveriKomentar(Komentar komentar){
+        if (komentar.getOcena() < 0 || komentar.getOcena() > 5) return false;
+        if (komentar.getTekst() == null || komentar.getTekst().equals("")) return false;
+	    return true;
     }
 
     public List<Komentar> dobaviKomentareRestorana(String restoran, boolean svi){
@@ -836,10 +871,9 @@ public class Aplikacija {
 	    return komentari;
     }
 
-    public boolean obrisiKomentar(String komentar, String korisnickoIme) throws Exception {
+    public boolean obrisiKomentar(String komentar) throws Exception {
 	    Komentar k = komentari.get(komentar);
 	    if (k == null)  throw new Exception("Nepostojeci komentar!");
-	    if (!k.getKorisnik().equals(korisnickoIme)) throw new Exception("Ne mozete obrisati ovaj komentar!");
 	    k.setAktivan(false);
 	    // promeniti ocenu restorana
         Restoran r = restorani.get(k.getRestoran());
@@ -915,7 +949,7 @@ public class Aplikacija {
 	}
 
 	public List<PorudzbinaDTO> porudzbineNaOsnovuKorisnika(Korisnik korisnik) throws Exception {
-
+        if (!korisnik.isAktivan()) throw new Exception("Neaktivan korisnik!");
         if (korisnik instanceof Kupac) return this.dobaviPorudzbineKupca(korisnik.getKorisnickoIme(), false);
         if (korisnik instanceof Dostavljac) return this.dobaviPorudzbineDostavljaca(korisnik.getKorisnickoIme(), false);
         if (korisnik instanceof Menadzer) return this.dobaviPorudzbineMenadzera(korisnik.getKorisnickoIme());
@@ -951,6 +985,29 @@ public class Aplikacija {
         else if (sort.equals("datumRastuce")){
             Collections.sort(porudzbine, (PorudzbinaDTO p1, PorudzbinaDTO p2) -> Long.compare(p1.getDatum(), p2.getDatum()));
         }
+    }
+
+    public boolean obrisiKorisnika(String korisnik) throws Exception {
+	    if (this.menadzeri.containsKey(korisnik)) {
+	        Menadzer m = this.menadzeri.get(korisnik);
+	        if (m.getRestoran() != null && !m.getRestoran().equals("")){
+	            throw new Exception("Nije moguce obrisati menadzera koji rukovodi nekim restoranom!");
+            }
+	        m.setAktivan(false);
+	        return true;
+        }
+	    if (this.dostavljaci.containsKey(korisnik)){
+	        this.dostavljaci.get(korisnik).setAktivan(false);
+	        return true;
+        }
+	    throw new Exception("Greska!");
+    }
+
+    public List<PorudzbinaDTO> dobaviSvePorudzbine() {
+	    List<PorudzbinaDTO> porudzbine = new ArrayList<>();
+	    for (Porudzbina p: this.porudzbine.values())
+	        porudzbine.add(toPorudzbinaDTO(p));
+	    return porudzbine;
     }
 
     // mozda svi zahtevi za jednu porudzbinu

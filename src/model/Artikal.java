@@ -6,7 +6,7 @@ public class Artikal {
     private String naziv;
     private double cena;
     private TipArtikla tip;
-    private double kolicina;
+    private Double kolicina;
     private String opis;
     private String slika;
 
@@ -17,7 +17,7 @@ public class Artikal {
         this.aktivan = true;
     }
 
-    public Artikal(String naziv, double cena, TipArtikla tip, double kolicina, String opis, String slika, String restoran) {
+    public Artikal(String naziv, double cena, TipArtikla tip, Double kolicina, String opis, String slika, String restoran) {
         this.naziv = naziv;
         this.cena = cena;
         this.tip = tip;
@@ -68,11 +68,11 @@ public class Artikal {
         this.tip = tip;
     }
 
-    public double getKolicina() {
+    public Double getKolicina() {
         return kolicina;
     }
 
-    public void setKolicina(double kolicina) {
+    public void setKolicina(Double kolicina) {
         this.kolicina = kolicina;
     }
 

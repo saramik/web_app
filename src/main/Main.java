@@ -104,14 +104,14 @@ public class Main {
 		
 		post("/login", (req, res) -> {
 			 res.type("application/json");
-			 LoginDTO k = g.fromJson(req.body(), LoginDTO.class);
-
-			 if (k.getKorisnickoIme() == null || k.getLozinka() == null) {
-			 	res.status(400);
-			 	return res;
-			 }
 
 			 try {
+				 LoginDTO k = g.fromJson(req.body(), LoginDTO.class);
+
+				 if (k.getKorisnickoIme() == null || k.getLozinka() == null) {
+					 res.status(400);
+					 return res;
+				 }
 			 	Session ss = req.session(true);
 			 	Korisnik korisnik = aplikacija.login(k.getKorisnickoIme(), k.getLozinka());
 			 	ss.attribute("user", korisnik);
@@ -159,11 +159,11 @@ public class Main {
 			Korisnik trenutniKorisnik = ss.attribute("user");
 			if(trenutniKorisnik == null) {
 				res.status(401);
-				return res; 		//?
+				return res;
 			}
 			else if (!(trenutniKorisnik instanceof Administrator)){
 				res.status(403);
-				return res;		//?
+				return res;
 			}
 
 			try {
@@ -194,7 +194,7 @@ public class Main {
 			Korisnik trenutniKorisnik = ss.attribute("user");
 			if(trenutniKorisnik == null) {
 				res.status(401);
-				return res; 		//?
+				return res;
 			}
 			res.status(200);
 			return g.toJson(trenutniKorisnik);
@@ -277,6 +277,29 @@ public class Main {
 				res.status(200);
 				return g.toJson(korisnici);
 			} catch (Exception e){
+				res.status(400);
+				return e.getMessage();
+			}
+		});
+
+		delete("/obrisiKorisnika/:korisnik", (req, res) -> {
+			res.type("application/json");
+			Session ss = req.session(true);
+			Korisnik trenutniKorisnik = ss.attribute("user");
+			if (trenutniKorisnik == null) {
+				res.status(401);
+				return "";
+			}
+			if (!(trenutniKorisnik instanceof Administrator)) {
+				res.status(403);
+				return "";
+			}
+			try {
+				String korisnik = req.params("korisnik");
+				aplikacija.obrisiKorisnika(korisnik);
+				res.status(200);
+				return "";
+			} catch (Exception e) {
 				res.status(400);
 				return e.getMessage();
 			}
@@ -433,7 +456,7 @@ public class Main {
 				res.status(401);
 				return "";
 			}
-			else if (!(trenutniKorisnik instanceof Menadzer)) {
+			if (!(trenutniKorisnik instanceof Menadzer)) {
 				res.status(403);
 				return "";
 			}
@@ -459,15 +482,14 @@ public class Main {
 				res.status(401);
 				return "";
 			}
-			else if (!(trenutniKorisnik instanceof Menadzer)) {
+			else if (!(trenutniKorisnik instanceof Administrator)) {
 				res.status(403);
 				return "";
 			}
 
 			try {
 				String artikal = req.params("artikal");
-				String restoran =((Menadzer) trenutniKorisnik).getRestoran();
-				aplikacija.obrisiArtikal(artikal, restoran);
+				aplikacija.obrisiArtikal(artikal);
 				res.status(200);
 				return "";
 			} catch (Exception e){
@@ -541,6 +563,9 @@ public class Main {
 			if (trenutniKorisnik instanceof Kupac){
 				List<PorudzbinaDTO> porudzbine = aplikacija.dobaviPorudzbineKupca(korisnickoIme, samoNedostavljene);
 				return g.toJson(porudzbine);
+			}
+			if (trenutniKorisnik instanceof Administrator){
+				List<PorudzbinaDTO> porudzbine = aplikacija.dobaviSvePorudzbine();
 			}
 			return "";
 		});
@@ -841,13 +866,13 @@ public class Main {
 				res.status(401);
 				return "";
 			}
-			if (!(trenutniKorisnik instanceof Kupac)){
+			if (!(trenutniKorisnik instanceof Administrator)){
 				res.status(403);
 				return "";
 			}
 			try {
 				String komentar = req.params("komentar");
-				aplikacija.obrisiKomentar(komentar, trenutniKorisnik.getKorisnickoIme());
+				aplikacija.obrisiKomentar(komentar);
 				res.status(200);
 				return "";
 			} catch (Exception e){
