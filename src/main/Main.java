@@ -22,36 +22,29 @@ import java.util.List;
 import DTO.*;
 import com.google.gson.Gson;
 
+import com.google.gson.GsonBuilder;
 import model.*;
 import spark.Request;
 import spark.Session;
 
 public class Main {
 	
-	private static Gson g = new Gson();	
-	private static Aplikacija aplikacija = new Aplikacija();
+	private static Gson g = new GsonBuilder().setPrettyPrinting().create();
 
+	private static Aplikacija aplikacija = new Aplikacija();
 
 	private static String path = new File(new File("").getAbsolutePath() + "/static/data/aplikacija.json").getAbsolutePath();
 
 	private static File file = new File(path);
-
 	
 	public static void upisUFajl() {
-		//Create the file
+
 		try {
-			if (file.createNewFile())
-			{
-			  //  System.out.println("File is created!");
-			} else {
-			   // System.out.println("File already exists.");
-			}
-			//Write Content
+
 			FileWriter writer = new FileWriter(file);
 			writer.write(g.toJson(aplikacija));
-			System.out.println(g.toJson(aplikacija));
 			writer.close();
-			
+
 		} catch (IOException e) {
 			System.out.println("Greska");
 		}
@@ -59,30 +52,26 @@ public class Main {
 	
 
 	public static void citanjeIzFajla() {
-		aplikacija.getKupci().put("kupac1", new Kupac("kupac1", "lozinka1", "kupkinja", "kupic",Pol.ZENSKI, 1000));
-		System.out.println(aplikacija.getKupci().size() + " je velicina");
 
 		try {
+
 			FileReader reader = new FileReader(file);
 			BufferedReader br = new BufferedReader(reader);
-			String st; 
+			String st;
 			String json = "";
-			try {
-				while ((st = br.readLine()) != null) {
-					json += st;
-				}
-			} catch (IOException e) {
-				System.out.println("greska");
-			}
-			
+			while ((st = br.readLine()) != null) json += st;
 			aplikacija = g.fromJson(json, Aplikacija.class);
-			
+
+
 		} catch (FileNotFoundException e) {
 			System.out.println("ne valja putanja");
+		} catch (IOException e) {
+			System.out.println("greska");
 		}
+
 	}
-	
-	
+
+
 	/**
 	 * @param args
 	 * @throws IOException
@@ -92,9 +81,10 @@ public class Main {
 		port(8081);
 		
 
+		citanjeIzFajla();
+		upisUFajl();
 		//citanjeIzFajla();
-		//upisUFajl();
-		
+
 		staticFiles.externalLocation(new File("./static").getCanonicalPath());
 
 
@@ -142,6 +132,7 @@ public class Main {
 					return res.body();
 				}
 				KorisnikDTO novi = aplikacija.registracijaKorisnika(k);
+				upisUFajl();
 				res.status(200);
 				return g.toJson(novi);
 
@@ -169,6 +160,8 @@ public class Main {
 			try {
 				KorisnikDTO k = g.fromJson(req.body(), KorisnikDTO.class);
 				KorisnikDTO novi = aplikacija.registracijaKorisnika(k);
+				upisUFajl();
+				res.status(200);
 				return g.toJson(novi);
 			} catch(Exception e){
 				res.status(400);
@@ -217,6 +210,7 @@ public class Main {
 					return "";
 				}
 				Korisnik izmenjeni = aplikacija.izmeniPodatke(k);
+				upisUFajl();
 				res.status(200);
 				return g.toJson(izmenjeni);
 
@@ -238,6 +232,7 @@ public class Main {
 			try {
 				IzmenaLozinkeDTO dto = g.fromJson(req.body(), IzmenaLozinkeDTO.class);
 				aplikacija.izmeniLozinku(trenutniKorisnik.getKorisnickoIme(), dto.getStaraLozinka(), dto.getNovaLozinka());
+				upisUFajl();
 				res.status(200);
 				return "";
 
@@ -297,6 +292,7 @@ public class Main {
 			try {
 				String korisnik = req.params("korisnik");
 				aplikacija.obrisiKorisnika(korisnik);
+				upisUFajl();
 				res.status(200);
 				return "";
 			} catch (Exception e) {
@@ -358,8 +354,9 @@ public class Main {
 			try {
 				RestoranDTO dto = g.fromJson(req.body(), RestoranDTO.class);
 				aplikacija.dodajRestoran(dto);
+				upisUFajl();
 				res.status(200);
-				return dto;
+				return g.toJson(dto);
 
 			} catch(Exception e) {
 				res.status(400);
@@ -420,6 +417,7 @@ public class Main {
 			try {
 				String restoran = req.params("restoran");
 				aplikacija.obrisiRestoran(restoran);
+				upisUFajl();
 				res.status(200);
 				return "";
 			} catch(Exception e) {
@@ -466,6 +464,7 @@ public class Main {
 				dto.setRestoran(((Menadzer) trenutniKorisnik).getRestoran());
 				dto.setAktivan(true);
 				Artikal a = aplikacija.dodajArtikalRestoranu(dto);
+				upisUFajl();
 				res.status(200);
 				return g.toJson(a);
 			} catch (Exception e){
@@ -490,6 +489,7 @@ public class Main {
 			try {
 				String artikal = req.params("artikal");
 				aplikacija.obrisiArtikal(artikal);
+				upisUFajl();
 				res.status(200);
 				return "";
 			} catch (Exception e){
@@ -514,6 +514,7 @@ public class Main {
 				Artikal artikal = g.fromJson(req.body(), Artikal.class);
 				String idArtikla = req.params("idArtikla");
 				aplikacija.izmeniArtikal(idArtikla, artikal);
+				upisUFajl();
 				res.status(200);
 				return "";
 			} catch (Exception e){
@@ -627,6 +628,7 @@ public class Main {
 				StatusPorudzbine noviStatus = StatusPorudzbine.valueOf(req.params("noviStatus"));
 				aplikacija.proveriKorisnikaZaNarudzbenicu(trenutniKorisnik, porudzbina); 	// da li korisnik moze da vidi artikle porudzbenice
 				Porudzbina p = aplikacija.promeniStatusPorudzbine(porudzbina, noviStatus, trenutniKorisnik);
+				upisUFajl();
 				res.status(200);
 				return g.toJson(p);
 			} catch (Exception e){
@@ -651,6 +653,7 @@ public class Main {
 			try {
 				String porudzbina = req.params("porudzbina");
 				aplikacija.kreirajZahtevZaDostavom(porudzbina, trenutniKorisnik);
+				upisUFajl();
 				res.status(200);
 				return "";
 			} catch (Exception e){
@@ -677,6 +680,7 @@ public class Main {
 				boolean odobreno = Boolean.parseBoolean(req.queryParams("odobreno"));
 				aplikacija.proveriOdgovorNaZahtev(trenutniKorisnik, zahtev);
 				aplikacija.odgovoriNaZahtevZaDostavom(zahtev, odobreno);
+				upisUFajl();
 				res.status(200);
 				return "";
 			} catch (Exception e){
@@ -777,6 +781,7 @@ public class Main {
 				if  (aplikacija.proveriKorisnikaZaKomentar(trenutniKorisnik, restoran))
 					aplikacija.dodajKomentar(komentar);
 				else throw new Exception("Ne mozete oceniti taj restoran");
+				upisUFajl();
 				res.status(200);
 				return "";
 			} catch (Exception e){
@@ -801,6 +806,7 @@ public class Main {
 				String komentar = req.params("komentar");
 				boolean odobren = Boolean.parseBoolean(req.params("odobren"));
 				aplikacija.resiKomentar(komentar, odobren);
+				upisUFajl();
 				res.status(200);
 				return "";
 			} catch(Exception e){
@@ -873,6 +879,7 @@ public class Main {
 			try {
 				String komentar = req.params("komentar");
 				aplikacija.obrisiKomentar(komentar);
+				upisUFajl();
 				res.status(200);
 				return "";
 			} catch (Exception e){

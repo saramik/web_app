@@ -25,7 +25,7 @@ public class Aplikacija {
 	private HashMap<String, ZahtevZaDostavom> zahteviZaDostavom = new HashMap<>();
 
 	public Aplikacija(){
-        kupci.put("kupac1", new Kupac("kupac1", "lozinka", "ana", "sasic",Pol.ZENSKI, 1000));
+        /*kupci.put("kupac1", new Kupac("kupac1", "lozinka", "ana", "sasic",Pol.ZENSKI, 1000));
         Kupac k = new Kupac("kupac2", "lozinka", "kupkinja", "kupic",Pol.ZENSKI, 199);
         k.setSakupljeniBodovi(200);
         kupci.put("kupac2", k);
@@ -72,7 +72,7 @@ public class Aplikacija {
 
         Porudzbina p3 = new Porudzbina("321", "r1", 123123, 3300.0, "kupac2", StatusPorudzbine.DOSTAVLJENA);
         porudzbine.put(p3.getId(), p3);
-        this.kupci.get("kupac2").getPorudzbine().add("321");
+        this.kupci.get("kupac2").getPorudzbine().add("321");*/
 
     }
 
@@ -199,6 +199,15 @@ public class Aplikacija {
 
     public void setKomentari(HashMap<String, Komentar> komentari) {
         this.komentari = komentari;
+    }
+
+
+    public HashMap<String, ZahtevZaDostavom> getZahteviZaDostavom() {
+        return zahteviZaDostavom;
+    }
+
+    public void setZahteviZaDostavom(HashMap<String, ZahtevZaDostavom> zahteviZaDostavom) {
+        this.zahteviZaDostavom = zahteviZaDostavom;
     }
 
     public List<KorisnikProsirenoDTO> dobaviSveKorisnike() {
@@ -563,7 +572,7 @@ public class Aplikacija {
         return artikal;
     }
 
-    // TODO: videti da li treba dozvoliti izmenu naziva artikla
+
     public Artikal izmeniArtikal(String id, Artikal artikal) throws Exception {
 
 	    if (!proveriArtikal(artikal)){

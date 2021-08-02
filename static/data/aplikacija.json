@@ -1,1 +1,220 @@
-{"administratori":{},"menadzeri":{},"dostavljaci":{},"kupci":{},"restorani":{},"artikli":{},"porudzbine":{},"komentari":{}}
+{
+  "administratori": {
+    "admin": {
+      "korisnickoIme": "admin",
+      "lozinka": "admin",
+      "ime": "admin",
+      "prezime": "admin",
+      "pol": "ZENSKI",
+      "datumRodjenja": 1000,
+      "aktivan": true
+    }
+  },
+  "menadzeri": {
+    "m1": {
+      "restoran": "zrenjaninski1",
+      "korisnickoIme": "m1",
+      "lozinka": "lozinka",
+      "ime": "ime",
+      "prezime": "prezime",
+      "pol": "ZENSKI",
+      "datumRodjenja": 100,
+      "aktivan": true
+    },
+    "menadzerko": {
+      "restoran": "r1",
+      "korisnickoIme": "menadzerko",
+      "lozinka": "lozinka",
+      "ime": "d",
+      "prezime": "d",
+      "pol": "ZENSKI",
+      "datumRodjenja": 1000,
+      "aktivan": true
+    },
+    "m": {
+      "restoran": "r2",
+      "korisnickoIme": "m",
+      "lozinka": "lozinka",
+      "ime": "d",
+      "prezime": "d",
+      "pol": "ZENSKI",
+      "datumRodjenja": 1000,
+      "aktivan": true
+    }
+  },
+  "dostavljaci": {
+    "dost": {
+      "korisnickoIme": "dost",
+      "lozinka": "admin",
+      "ime": "d",
+      "prezime": "d",
+      "pol": "ZENSKI",
+      "datumRodjenja": 1000,
+      "aktivan": true
+    }
+  },
+  "kupci": {
+    "kupac2": {
+      "porudzbine": [
+        "54321",
+        "123",
+        "321"
+      ],
+      "sakupljeniBodovi": 200,
+      "tipKupca": {
+        "imeTipa": "BRONZANI",
+        "popust": 0.0,
+        "trazeniBroj": 100
+      },
+      "korisnickoIme": "kupac2",
+      "lozinka": "lozinka",
+      "ime": "kupkinja",
+      "prezime": "kupic",
+      "pol": "ZENSKI",
+      "datumRodjenja": 199,
+      "aktivan": true
+    },
+    "kupac1": {
+      "porudzbine": [
+        "12345"
+      ],
+      "sakupljeniBodovi": 0,
+      "tipKupca": {
+        "imeTipa": "BRONZANI",
+        "popust": 0.0,
+        "trazeniBroj": 100
+      },
+      "korisnickoIme": "kupac1",
+      "lozinka": "lozinka",
+      "ime": "ana",
+      "prezime": "sasic",
+      "pol": "ZENSKI",
+      "datumRodjenja": 1000,
+      "aktivan": true
+    }
+  },
+  "restorani": {
+    "r2": {
+      "naziv": "r2",
+      "tip": "KINESKI",
+      "artikli": [],
+      "status": false,
+      "lokacija": {
+        "geografskaDuzina": 0.0,
+        "geografskaSirina": 0.0
+      },
+      "logo": "",
+      "menadzer": "m",
+      "brojOcena": 0,
+      "ocena": 0.0,
+      "otvorenoOd": 480,
+      "otvorenoDo": 900,
+      "aktivan": true
+    },
+    "zrenjaninski1": {
+      "naziv": "zrenjaninski1",
+      "tip": "KINESKI",
+      "artikli": [],
+      "status": false,
+      "lokacija": {
+        "geografskaDuzina": 10.0,
+        "geografskaSirina": 1.0,
+        "ulica": "ulica",
+        "broj": "123",
+        "mesto": "Zeograd",
+        "postanskiBroj": "123"
+      },
+      "logo": "asd",
+      "brojOcena": 0,
+      "ocena": 0.0,
+      "otvorenoOd": 1,
+      "otvorenoDo": 10,
+      "aktivan": true
+    },
+    "r1": {
+      "naziv": "r1",
+      "tip": "ITALIJANSKI",
+      "artikli": [
+        "123"
+      ],
+      "status": false,
+      "lokacija": {
+        "geografskaDuzina": 0.0,
+        "geografskaSirina": 0.0
+      },
+      "logo": "",
+      "menadzer": "menadzerko",
+      "brojOcena": 0,
+      "ocena": 0.0,
+      "otvorenoOd": 480,
+      "otvorenoDo": 900,
+      "aktivan": true
+    }
+  },
+  "artikli": {
+    "123": {
+      "id": "123",
+      "naziv": "a1",
+      "cena": 10.0,
+      "tip": "JELO",
+      "kolicina": 0.0,
+      "opis": "opis a1",
+      "slika": "",
+      "restoran": "r1",
+      "aktivan": true
+    }
+  },
+  "porudzbine": {
+    "54321": {
+      "id": "54321",
+      "artikli": [],
+      "restoran": "r1",
+      "datum": 20000,
+      "cena": 150.0,
+      "kupac": "kupac2",
+      "status": "U_PRIPREMI"
+    },
+    "123": {
+      "id": "123",
+      "artikli": [],
+      "restoran": "r2",
+      "datum": 5,
+      "cena": 10.0,
+      "kupac": "kupac2",
+      "status": "DOSTAVLJENA"
+    },
+    "321": {
+      "id": "321",
+      "artikli": [],
+      "restoran": "r1",
+      "datum": 123123,
+      "cena": 3300.0,
+      "kupac": "kupac2",
+      "status": "DOSTAVLJENA"
+    },
+    "12345": {
+      "id": "12345",
+      "artikli": [
+        {
+          "artikal": "111",
+          "nazivArtikla": "artikal1",
+          "kolicina": 1.0,
+          "cena": 123.0
+        },
+        {
+          "artikal": "222",
+          "nazivArtikla": "artikal2",
+          "kolicina": 1.0,
+          "cena": 123.0
+        }
+      ],
+      "restoran": "r1",
+      "datum": 1000,
+      "cena": 100.0,
+      "kupac": "kupac1",
+      "status": "CEKA_DOSTAVLJACA"
+    }
+  },
+  "komentari": {},
+  "zahteviZaDostavom": {}
+}
