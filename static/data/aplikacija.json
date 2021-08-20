@@ -3,14 +3,23 @@
     "admin": {
       "korisnickoIme": "admin",
       "lozinka": "admin",
-      "ime": "admin",
+      "ime": "s",
       "prezime": "admin",
-      "pol": "ZENSKI",
+      "pol": "MUSKI",
       "datumRodjenja": 1000,
       "aktivan": true
     }
   },
   "menadzeri": {
+    "mn": {
+      "korisnickoIme": "mn",
+      "lozinka": "mn",
+      "ime": "mn",
+      "prezime": "mn",
+      "pol": "ZENSKI",
+      "datumRodjenja": 1455,
+      "aktivan": true
+    },
     "m1": {
       "restoran": "zrenjaninski1",
       "korisnickoIme": "m1",
@@ -54,6 +63,38 @@
     }
   },
   "kupci": {
+    "ii": {
+      "porudzbine": [],
+      "sakupljeniBodovi": 0,
+      "tipKupca": {
+        "imeTipa": "BRONZANI",
+        "popust": 0.0,
+        "trazeniBroj": 100
+      },
+      "korisnickoIme": "ii",
+      "lozinka": "ii",
+      "ime": "ii",
+      "prezime": "ii",
+      "pol": "ZENSKI",
+      "datumRodjenja": 12345,
+      "aktivan": true
+    },
+    "kk": {
+      "porudzbine": [],
+      "sakupljeniBodovi": 0,
+      "tipKupca": {
+        "imeTipa": "BRONZANI",
+        "popust": 0.0,
+        "trazeniBroj": 100
+      },
+      "korisnickoIme": "kk",
+      "lozinka": "kk",
+      "ime": "kk",
+      "prezime": "kk",
+      "pol": "MUSKI",
+      "datumRodjenja": 6565,
+      "aktivan": true
+    },
     "kupac2": {
       "porudzbine": [
         "54321",
@@ -72,6 +113,38 @@
       "prezime": "kupic",
       "pol": "ZENSKI",
       "datumRodjenja": 199,
+      "aktivan": true
+    },
+    "iiee": {
+      "porudzbine": [],
+      "sakupljeniBodovi": 0,
+      "tipKupca": {
+        "imeTipa": "BRONZANI",
+        "popust": 0.0,
+        "trazeniBroj": 100
+      },
+      "korisnickoIme": "iiee",
+      "lozinka": "ii",
+      "ime": "iiee",
+      "prezime": "iiee",
+      "pol": "ZENSKI",
+      "datumRodjenja": 356,
+      "aktivan": true
+    },
+    "iitt": {
+      "porudzbine": [],
+      "sakupljeniBodovi": 0,
+      "tipKupca": {
+        "imeTipa": "BRONZANI",
+        "popust": 0.0,
+        "trazeniBroj": 100
+      },
+      "korisnickoIme": "iitt",
+      "lozinka": "ii",
+      "ime": "iitt",
+      "prezime": "iitt",
+      "pol": "ZENSKI",
+      "datumRodjenja": 1234,
       "aktivan": true
     },
     "kupac1": {

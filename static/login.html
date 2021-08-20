@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Log in</title>
+    <link href="css/style.css" rel="stylesheet">
+    <script src="js/jquery.min.js"></script>
+    <script src="js/script.js"></script>
+
+    <link rel="stylesheet" href="bootstrap-4.3.1-dist/css/bootstrap.min.css">
+
+    <script src="bootstrap-4.3.1-dist/js/bootstrap.min.js"></script>
+    <script>
+			$(document).ready( function() {
+				isLoggedIn();
+			});
+		</script>
+</head>
+<body>
+<form id="login">
+    <table id="form_holder">
+        <tr>
+            <td>
+                <label >Korisnicko ime</label>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <input type="email" class="form-control" placeholder="Enter username" name="korisnickoIme" required>
+                <fieldset id="log_war_email"></fieldset>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label >Lozinka</label>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <input type="password" class="form-control" placeholder="Password" name="lozinka" required>
+                <fieldset id="log_war_pass"></fieldset>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <input type="button" value="Prijava" onclick="login()" class="btn btn-primary">
+                <input type="button" value="Registracija" onclick="location='/registracija.html'" class="btn btn-primary">
+            </td>
+        </tr>
+
+    </table>
+    <fieldset id="log_war"></fieldset>
+</form>
+</body>
+</html>

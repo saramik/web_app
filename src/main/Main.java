@@ -20,9 +20,8 @@ import java.io.IOException;
 import java.util.List;
 
 import DTO.*;
-import com.google.gson.Gson;
+import com.google.gson.*;
 
-import com.google.gson.GsonBuilder;
 import model.*;
 import spark.Request;
 import spark.Session;
@@ -105,9 +104,13 @@ public class Main {
 			 	Session ss = req.session(true);
 			 	Korisnik korisnik = aplikacija.login(k.getKorisnickoIme(), k.getLozinka());
 			 	ss.attribute("user", korisnik);
-			 	res.status(200);
-			 	return g.toJson(korisnik);
-
+				res.status(200);
+				String json = g.toJson(korisnik, Korisnik.class);
+				JsonParser parser = new JsonParser();
+				JsonElement jsonElement = parser.parse(json);
+				JsonObject jsonObject = jsonElement.getAsJsonObject();
+				jsonObject.addProperty("uloga", korisnik.getClass().toString());
+				return jsonObject.toString();
 			 } catch (Exception e){
 			 	res.status(400);
 			 	return "Losi kredencijali";
@@ -126,11 +129,7 @@ public class Main {
 
 			try {
 				KorisnikDTO k = g.fromJson(req.body(), KorisnikDTO.class);
-				if (k.getUloga().equals(Uloga.ADMINISTRATOR) || k.getUloga().equals(Uloga.DOSTAVLJAC) ||
-						k.getUloga().equals(Uloga.MENADZER)){
-					res.status(400);
-					return res.body();
-				}
+				k.setUloga(Uloga.KUPAC);
 				KorisnikDTO novi = aplikacija.registracijaKorisnika(k);
 				upisUFajl();
 				res.status(200);
@@ -169,6 +168,23 @@ public class Main {
 			}
 		});
 
+		get("/isLoggedIn", (req, res) -> {
+			res.type("application/json");
+			Session ss = req.session(true);
+			Korisnik k = ss.attribute("user");
+			String loggedIn = "true";
+			if (k == null)
+				loggedIn = "false";
+			else {
+				String jsonString = "{'loggedIn':'true'}";
+				JsonParser parser = new JsonParser();
+				JsonObject jsonObject = (JsonObject) parser.parse(jsonString);
+				jsonObject.addProperty("uloga", k.getClass().toString());
+				return jsonObject.toString();
+			}
+
+			return "{\"loggedIn\":" + loggedIn + "}";
+		});
 
 		get("/logout", (req, res) -> {
 			res.type("application/json");
@@ -216,7 +232,7 @@ public class Main {
 
 			} catch(Exception e){
 				res.status(400);
-				return e.getMessage();
+				return e.getLocalizedMessage();
 			}
 
 		});

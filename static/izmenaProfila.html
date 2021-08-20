@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Izmena</title>
+	<script src="js/jquery.min.js"></script>
+	<script src="js/script.js"></script>
+	<link href="css/style.css" rel="stylesheet">
+	<link rel="stylesheet" href="bootstrap-4.3.1-dist/css/bootstrap.min.css">
+	<script>
+		$(document).ready( function() {
+			KorisnikKojiSeMenja(getUrlVars()["x"]);
+		});
+	</script>
+</head>
+<body>
+	<form id="izmenaPodataka">
+		<table id="form_holder">
+			<tr>
+				<td>
+					<h4>Izmena podataka</h4>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label >Ime</label>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<input type="text" class="form-control" id="ime" placeholder = "" name = "ime">
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label >Prezime</label>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<input type="text" class="form-control" id="prezime" placeholder = "" name = "prezime">
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label >Korisnicko ime</label>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<input type="email" class="form-control" id="korisnickoIme" placeholder = "" name = "korisnickoIme">
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label >Lozinka</label>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<input type="password" class="form-control" id="lozinka" placeholder = "" name = "lozinka">
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label >Datum rodjenja</label>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<input type="text" class="form-control" id="datumRodjenja" aria-describedby="emailHelp" placeholder="" name="datumRodjenja" required>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<label>Pol</label>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<input type="radio" id = "ZENSKI" name="pol" value="ZENSKI"> ZENSKI
+					<input type="radio" id = "MUSKI" name="pol" value="MUSKI"> MUSKI
+				</td>
+			</tr>
+			<tr>
+				<td><input type="button" value="Izmeni" onclick="izmeniKorisnika()" class="btn btn-primary"></td>
+			</tr>
+			<tr>
+				<td><input type="button" id = "obrisi_btn" value="Obrisi" onclick="obrisiKorisnika()" class="btn btn-primary"></td>
+			</tr>
+			<tr>
+			<fieldset id="log_war_mess"></fieldset>
+			</tr>		
+		</table>
+	</form>
+</body>
+</html>

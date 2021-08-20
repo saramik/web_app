@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Registracija</title>
+        <script src="js/jquery.min.js"></script>
+        <script src="js/script.js"></script>
+		<link href="css/style.css" rel="stylesheet">
+		<link rel="stylesheet" href="bootstrap-4.3.1-dist/css/bootstrap.min.css">
+		<script src="bootstrap-4.3.1-dist/js/bootstrap.min.js"></script>
+		<script>
+			$(document).ready( function() {
+				registracijaUloga();
+			});
+		</script>
+
+</head>
+<body>
+<form id="dodajKorisnika">
+	<table id="form_holder">
+		<tr>
+			<td>
+				<label for="exampleInputEmail1">Ime</label> 
+			</td>
+			<td>
+				<input type="text" class="form-control" id="ime" aria-describedby="emailHelp" placeholder="Enter name" name="ime" required>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<label for="exampleInputPassword1">Prezime</label> 
+			</td>
+			<td>
+				<input type="text" class="form-control" id="prezime" placeholder="Enter surname" name="prezime" required>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<label for="exampleInputEmail1">Korisnicko ime</label>
+			</td>
+			<td>
+				<input type="email" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter username" name="korisnickoIme" required>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<label for="exampleInputPassword1">Lozinka</label> 
+			</td>
+			<td>
+				<input type="password" class="form-control" id="exampleInputPassword1" placeholder="Enter password" name="lozinka" required>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<label for="exampleInputEmail1">Datum rodjenja</label>
+			</td>
+			<td>
+				<input type="email" class="form-control" id="exampleInputDate" aria-describedby="emailHelp" placeholder="Enter date" name="datumRodjenja" required>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				<label for="exampleInputPassword1">Pol</label>
+			</td>
+			<td>
+				<input type="radio" name="pol" value="ZENSKI" checked="checked"> ZENSKI
+				<input type="radio" name="pol" value="MUSKI"> MUSKI
+			</td>
+		</tr>
+		<tr id = "uloga">
+			<td>
+				<label for="exampleInputPassword1">Uloga</label>
+			</td>
+			<td>
+				<input type="radio" name="uloga" value="MENADZER" checked="checked"> menadzer
+				<input type="radio" name="uloga" value="ADMINISTRATOR"> admin
+			</td>
+		</tr>
+		<tr>
+		 <td colspan="2" >
+			 <input id = "kupac" type="button" value="Dodaj" onclick="dodajKorisnika('kupac')" class="btn btn-primary">
+			 <input id = "admin" type="button" value="Dodaj" onclick="dodajKorisnika('admin')" class="btn btn-primary">
+		 </td>
+		</tr>	
+	</table>
+	<fieldset id="log_war"></fieldset>
+	</form>
+</body>
+</html>
